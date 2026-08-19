@@ -1,0 +1,4535 @@
+openapi: 3.1.0
+info:
+  title: ANY.RUN Sandbox
+  description: >
+    [ANY.RUN](https://any.run) is a provider of malware analysis and threat
+    intelligence services used by 15,000+ SOC teams worldwide.
+
+
+    This documentation is designed to guide you through seamless integration of
+    [ANY.RUN's](https://any.run) Interactive Sandbox into your security
+    infrastructure for faster threat analysis, alert resolution, and incident
+    response.
+
+
+    With the Sandbox API, you can:
+
+    - Submit files and URLs for analysis
+
+    - Monitor analysis progress in real time
+
+    - Get detailed reports
+
+    - Manage analysis sessions
+
+
+    You can also explore our **Threat Intelligence API**
+    [here](https://any.run/api-documentation/#ti-lookup).
+
+
+    For easier integration, use our SDK, available on
+    [GitHub](https://github.com/anyrun/anyrun-sdk) and
+    [PyPI](https://pypi.org/project/anyrun-sdk/).
+  termsOfService: https://any.run/terms.pdf
+  contact:
+    name: ANY.RUN
+    url: https://app.any.run/contact-us
+    email: support@any.run
+  version: 1.0.0
+servers:
+  - url: https://api.any.run
+security:
+  - API-Key: []
+  - Basic: []
+tags:
+  - name: Analysis
+    description: Operations on ANY.RUN Sandbox analysis tasks.
+  - name: User
+    description: Operations on ANY.RUN services users.
+  - name: Environment
+    description: Operations on ANY.RUN Sandbox environments.
+externalDocs:
+  description: ANY.RUN API documentation
+  url: https://any.run/api-documentation/
+paths:
+  /v1/analysis/:
+    get:
+      tags:
+        - Analysis
+      summary: Get user tasks history
+      description: Returns max of 100 last tasks from the user's history and their
+        basic information.
+      operationId: GetAnalysesHistory
+      parameters:
+        - $ref: "#/components/parameters/TeamHistoryParam"
+        - $ref: "#/components/parameters/SkipHistoryParam"
+        - $ref: "#/components/parameters/LimitHistoryParam"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TasksHistoryDto"
+              examples:
+                Success:
+                  $ref: "#/components/examples/GetAnalysisExample"
+        4XX:
+          description: Not OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDocumentDto"
+              examples:
+                403_UnauthorizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnauthorizedError"
+                403_WrongCredentialsError:
+                  $ref: "#/components/examples/ErrorExample_403_WrongCredentialsError"
+                403_UnrecognizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnrecognizedError"
+                403_ApiUnavailableError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiUnavailableError"
+    post:
+      tags:
+        - Analysis
+      summary: Submit a file or a URL for malware analysis
+      description: Creates a new analysis task and returns an identifier. If the task
+        starts immediately, it returns taskUuid. If the task is queued, it
+        returns queueTaskId (temporary). Once a queued task starts, use the
+        taskUuid (via GET /v1/analysis/monitor/{taskUuid}) to track it.
+      operationId: RunNewAnalysis
+      requestBody:
+        $ref: "#/components/requestBodies/CreateTaskBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskSubmitDto"
+              examples:
+                Success:
+                  $ref: "#/components/examples/RunNewAnalysisExample"
+        "202":
+          description: Queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskSubmitQueuedDto"
+              examples:
+                Success:
+                  $ref: "#/components/examples/RunNewAnalysisQueuedExample"
+        4XX:
+          description: Not OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDocumentDto"
+              examples:
+                403_UnauthorizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnauthorizedError"
+                403_WrongCredentialsError:
+                  $ref: "#/components/examples/ErrorExample_403_WrongCredentialsError"
+                403_UnrecognizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnrecognizedError"
+                403_ApiUnavailableError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiUnavailableError"
+                403_PlanRequirementsNotMetError:
+                  $ref: "#/components/examples/ErrorExample_403_PlanRequirementsNotMetError"
+                400_PlanRequirementsNotMetError:
+                  $ref: "#/components/examples/ErrorExample_400_PlanRequirementsNotMetError"
+                400_PublicTasksWithBrandedReportsError:
+                  $ref: "#/components/examples/ErrorExample_400_PublicTasksWithBrandedReportsErro\
+                    r"
+  /v1/analysis/{taskUuid}:
+    get:
+      tags:
+        - Analysis
+      summary: Get analysis report
+      description: Returns analysis report on a submission by its task ID.
+      operationId: GetAnalysisReport
+      parameters:
+        - $ref: "#/components/parameters/TaskUuidParam"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessDocumentDto"
+        4XX:
+          description: Not OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDocumentDto"
+              examples:
+                403_UnauthorizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnauthorizedError"
+                403_WrongCredentialsError:
+                  $ref: "#/components/examples/ErrorExample_403_WrongCredentialsError"
+                403_UnrecognizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnrecognizedError"
+                403_ApiUnavailableError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiUnavailableError"
+                403_ApiDisabledError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiDisabledError"
+                403_TaskAccessForbiddenError:
+                  $ref: "#/components/examples/ErrorExample_403_TaskAccessForbiddenError"
+                404_TaskNotFoundError:
+                  $ref: "#/components/examples/ErrorExample_404_TaskNotFoundError"
+                400_TaskInvalidUuidError:
+                  $ref: "#/components/examples/ErrorExample_400_TaskInvalidUuidError"
+  /v1/analysis/addtime/{taskUuid}:
+    patch:
+      tags:
+        - Analysis
+      summary: Add analysis time to a task
+      description: Adds 60 seconds to the task runtime by the task ID if the task has
+        not been completed yet.
+      operationId: ProlongAnalysis
+      parameters:
+        - $ref: "#/components/parameters/TaskUuidParam"
+      responses:
+        "202":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskAddTimeDto"
+              examples:
+                Success:
+                  $ref: "#/components/examples/ProlongAnalysisExample"
+        4XX:
+          description: Not OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDocumentDto"
+              examples:
+                403_UnauthorizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnauthorizedError"
+                403_WrongCredentialsError:
+                  $ref: "#/components/examples/ErrorExample_403_WrongCredentialsError"
+                403_UnrecognizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnrecognizedError"
+                403_ApiUnavailableError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiUnavailableError"
+                403_ApiDisabledError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiDisabledError"
+                403_TaskAccessForbiddenError:
+                  $ref: "#/components/examples/ErrorExample_403_TaskAccessForbiddenError"
+                404_TaskNotFoundError:
+                  $ref: "#/components/examples/ErrorExample_404_TaskNotFoundError"
+                400_TaskInvalidUuidError:
+                  $ref: "#/components/examples/ErrorExample_400_TaskInvalidUuidError"
+                400_TaskAlreadyCompletedError:
+                  $ref: "#/components/examples/ErrorExample_400_TaskAlreadyCompletedError"
+  /v1/analysis/stop/{taskUuid}:
+    patch:
+      tags:
+        - Analysis
+      summary: Stop task
+      description: Stops task by the task ID if the task has not been completed yet.
+      operationId: StopAnalysis
+      parameters:
+        - $ref: "#/components/parameters/TaskUuidParam"
+      responses:
+        "202":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskStopDto"
+              examples:
+                Success:
+                  $ref: "#/components/examples/StopAnalysisExample"
+        4XX:
+          description: Not OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDocumentDto"
+              examples:
+                403_UnauthorizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnauthorizedError"
+                403_WrongCredentialsError:
+                  $ref: "#/components/examples/ErrorExample_403_WrongCredentialsError"
+                403_UnrecognizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnrecognizedError"
+                403_ApiUnavailableError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiUnavailableError"
+                403_ApiDisabledError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiDisabledError"
+                403_TaskAccessForbiddenError:
+                  $ref: "#/components/examples/ErrorExample_403_TaskAccessForbiddenError"
+                404_TaskNotFoundError:
+                  $ref: "#/components/examples/ErrorExample_404_TaskNotFoundError"
+                400_TaskInvalidUuidError:
+                  $ref: "#/components/examples/ErrorExample_400_TaskInvalidUuidError"
+                400_TaskAlreadyCompletedError:
+                  $ref: "#/components/examples/ErrorExample_400_TaskAlreadyCompletedError"
+  /v1/analysis/delete/{taskUuid}:
+    delete:
+      tags:
+        - Analysis
+      summary: Delete task
+      description: Deletes a task in ANY.RUN if the user making the request has the
+        rights to do so.
+      operationId: DeleteAnalysis
+      parameters:
+        - $ref: "#/components/parameters/TaskUuidParam"
+      responses:
+        "202":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskDeleteDto"
+              examples:
+                Success:
+                  $ref: "#/components/examples/DeleteAnalysisExample"
+        4XX:
+          description: Not OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDocumentDto"
+              examples:
+                403_UnauthorizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnauthorizedError"
+                403_WrongCredentialsError:
+                  $ref: "#/components/examples/ErrorExample_403_WrongCredentialsError"
+                403_UnrecognizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnrecognizedError"
+                403_ApiUnavailableError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiUnavailableError"
+                403_ApiDisabledError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiDisabledError"
+                403_TaskAccessForbiddenError:
+                  $ref: "#/components/examples/ErrorExample_403_TaskAccessForbiddenError"
+                404_TaskNotFoundError:
+                  $ref: "#/components/examples/ErrorExample_404_TaskNotFoundError"
+                400_TaskInvalidUuidError:
+                  $ref: "#/components/examples/ErrorExample_400_TaskInvalidUuidError"
+                400_TaskIsRunningError:
+                  $ref: "#/components/examples/ErrorExample_400_TaskIsRunningError"
+  /v1/analysis/monitor/{taskUuid}:
+    get:
+      tags:
+        - Analysis
+      summary: Get task status stream
+      description: Returns task status by identifier. The {taskUuid} parameter can be
+        taskUuid for active or completed tasks or queueTaskId for queued tasks.
+        If a queued task has started, the response will include its taskUuid.
+      operationId: GetAnalysisStatusStream
+      parameters:
+        - $ref: "#/components/parameters/TaskUuidParam"
+      responses:
+        "200":
+          description: OK
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              examples:
+                Task_running:
+                  $ref: "#/components/examples/TaskRunningExample"
+                Task_soon:
+                  $ref: "#/components/examples/TaskRunningExample"
+                Task_error:
+                  $ref: "#/components/examples/TaskPreLauncErrorExample"
+                Task_queued:
+                  $ref: "#/components/examples/TaskQueuedExample"
+                Task_canceled_or_unknown:
+                  $ref: "#/components/examples/TaskCanceledOrUnknownExample"
+        4XX:
+          description: Not OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDocumentDto"
+              examples:
+                403_UnauthorizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnauthorizedError"
+                403_WrongCredentialsError:
+                  $ref: "#/components/examples/ErrorExample_403_WrongCredentialsError"
+                403_UnrecognizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnrecognizedError"
+                403_ApiUnavailableError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiUnavailableError"
+                403_ApiDisabledError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiDisabledError"
+                403_TaskAccessForbiddenError:
+                  $ref: "#/components/examples/ErrorExample_403_TaskAccessForbiddenError"
+                404_TaskNotFoundError:
+                  $ref: "#/components/examples/ErrorExample_404_TaskNotFoundError"
+                400_TaskInvalidUuidError:
+                  $ref: "#/components/examples/ErrorExample_400_TaskInvalidUuidError"
+  /v1/environment/:
+    get:
+      tags:
+        - Environment
+      summary: Get available environments
+      description: Returns information about available environment configurations in
+        the sandbox.
+      operationId: GetEnvironment
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskEnvironmentsDto"
+              examples:
+                Success:
+                  $ref: "#/components/examples/GetEnvironmentsExample"
+        4XX:
+          description: Not OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDocumentDto"
+              examples:
+                403_UnauthorizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnauthorizedError"
+                403_WrongCredentialsError:
+                  $ref: "#/components/examples/ErrorExample_403_WrongCredentialsError"
+                403_UnrecognizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnrecognizedError"
+                403_ApiUnavailableError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiUnavailableError"
+                403_ApiDisabledError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiDisabledError"
+  /v1/user/:
+    get:
+      tags:
+        - User
+      summary: Get user's limits
+      description: Returns user's API limits.
+      operationId: GetUserLimits
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserLimitsDto"
+              examples:
+                Success:
+                  $ref: "#/components/examples/GetUserLimitsExample"
+        4XX:
+          description: Not OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDocumentDto"
+              examples:
+                403_UnauthorizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnauthorizedError"
+                403_WrongCredentialsError:
+                  $ref: "#/components/examples/ErrorExample_403_WrongCredentialsError"
+                403_UnrecognizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnrecognizedError"
+                403_ApiUnavailableError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiUnavailableError"
+                403_ApiDisabledError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiDisabledError"
+  /v1/user/presets:
+    get:
+      tags:
+        - User
+      summary: Get user's sandbox presets
+      description: Returns user's sandbox presets information.
+      operationId: GetUserPresets
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPresetDto"
+              examples:
+                Success:
+                  $ref: "#/components/examples/GetUserPresetsExample"
+        4XX:
+          description: Not OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDocumentDto"
+              examples:
+                403_UnauthorizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnauthorizedError"
+                403_WrongCredentialsError:
+                  $ref: "#/components/examples/ErrorExample_403_WrongCredentialsError"
+                403_UnrecognizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnrecognizedError"
+                403_ApiUnavailableError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiUnavailableError"
+                403_ApiDisabledError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiDisabledError"
+  /report/{taskUuid}/ioc/json:
+    get:
+      tags:
+        - Analysis
+      summary: Get IOCs extracted from submission analysis
+      description: Returns IOCs extracted from analysis, conducted on a submission, by
+        its task ID.
+      operationId: GetIOCJson
+      parameters:
+        - $ref: "#/components/parameters/TaskUuidParam"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IocDto"
+              examples:
+                Success:
+                  $ref: "#/components/examples/GetIOCJsonExample"
+        4XX:
+          description: Not OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDocumentDto"
+              examples:
+                403_UnauthorizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnauthorizedError"
+                403_WrongCredentialsError:
+                  $ref: "#/components/examples/ErrorExample_403_WrongCredentialsError"
+                403_UnrecognizedError:
+                  $ref: "#/components/examples/ErrorExample_403_UnrecognizedError"
+                403_ApiUnavailableError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiUnavailableError"
+                403_ApiDisabledError:
+                  $ref: "#/components/examples/ErrorExample_403_ApiDisabledError"
+                403_PlanRequirementsNotMetError:
+                  $ref: "#/components/examples/ErrorExample_403_PlanRequirementsNotMetError"
+                400_PlanRequirementsNotMetError:
+                  $ref: "#/components/examples/ErrorExample_400_PlanRequirementsNotMetError"
+                403_PrivateContentError:
+                  $ref: "#/components/examples/ErrorExample_403_PrivateContentError"
+                404_TaskNotFoundError:
+                  $ref: "#/components/examples/ErrorExample_404_TaskNotFoundError"
+                400_TaskInvalidUuidError:
+                  $ref: "#/components/examples/ErrorExample_400_TaskInvalidUuidError"
+components:
+  parameters:
+    TeamHistoryParam:
+      name: team
+      description: Set to true to receive team history.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    SkipHistoryParam:
+      name: skip
+      description: Set the number of elements to bypass before starting data retrieval.
+      in: query
+      required: false
+      schema:
+        type: number
+        minimum: 0
+        default: 0
+    LimitHistoryParam:
+      name: limit
+      description: Set the number of elements returned in one request.
+      in: query
+      required: false
+      schema:
+        type: number
+        minimum: 0
+        maximum: 100
+        default: 25
+    TaskUuidParam:
+      name: taskUuid
+      description: Specify the unique identifier (UUID) of the task.
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/UuidDto"
+  requestBodies:
+    CreateTaskBody:
+      description: Multipart form-data with parameters of a task to be created.
+      required: true
+      content:
+        multipart/form-data:
+          examples:
+            CreateUrlAnalysis:
+              $ref: "#/components/examples/CreateUrlAnalysisExample"
+          schema:
+            type: object
+            additionalProperties: false
+            properties:
+              obj_type:
+                description: Specify the type of task you want to launch. Note that option
+                  `rerun` **MUST** only be used with the parameter
+                  `task_rerun_uuid`.
+                type: string
+                enum:
+                  - file
+                  - url
+                  - download
+                  - rerun
+                default: file
+              file:
+                type: string
+                format: binary
+                description: Provide the file to be analyzed.
+              obj_url:
+                description: "Specify the URL you want to analyze. This parameter **MUST** only
+                  be used with `obj_type`: `url` or `obj_type`: `download`."
+                type: string
+              task_rerun_uuid:
+                description: "Provide the UUID of the task you want to restart. This parameter
+                  **MUST** only be used with `obj_type`: `rerun`."
+                type: string
+              env_os:
+                description: Specify the operating system for your analysis.
+                type: string
+                enum:
+                  - windows
+                  - linux
+                  - android
+                  - macos
+                default: windows
+              env_bitness:
+                description: >
+                  Specify the bitness of the operating system. This parameter
+                  has the following restrictions:
+                    - allowed values for *windows*: `32`, `64` (default);
+                    - allowed values for *linux*: `64` (default);
+                    - allowed values for *android*: `64` (default);
+                    - allowed values for *macos*: `64` (default);
+                type: number
+                enum:
+                  - 32
+                  - 64
+                default: 64
+              env_version:
+                description: >
+                  Specify the version of the OS. This parameter has the
+                  following restrictions:
+                    - allowed values for *windows*: `7`, `10` (default), `11`, `server 2025`;
+                    - allowed values for *linux*: `12.2` (debian), `22.04.2` (ubuntu / default);
+                    - allowed values for *android*: `14` (default);
+                    - allowed values for *macos*: `15` (default);
+                type: string
+                enum:
+                  - "7"
+                  - "10"
+                  - "11"
+                  - "12.2"
+                  - 22.04.2
+                  - "14"
+                  - "15"
+                  - server 2025
+              env_type:
+                description: >
+                  Specify the environment preset type. This parameter has the
+                  following restrictions:
+                    - allowed values for *windows*: `complete` (default), `development` (only windows 10 64bit);
+                    - allowed values for *linux*: `complete` (default);
+                    - allowed values for *android*: `complete` (default);
+                    - allowed values for *macos*: `complete` (default);
+
+                  Values `clean` and `office` are **deprecated** starting **June
+                  2, 2025**.
+                type: string
+                enum:
+                  - complete
+                  - development
+              env_locale:
+                description: Specify the operating system's language.
+                type: string
+                enum:
+                  - ar-EG
+                  - ar-IQ
+                  - ar-KW
+                  - ar-QA
+                  - ar-SA
+                  - ar-SY
+                  - ar-YE
+                  - be-BY
+                  - bg-BG
+                  - cs-CZ
+                  - da-DK
+                  - de-AT
+                  - de-CH
+                  - de-DE
+                  - el-GR
+                  - en-AU
+                  - en-CA
+                  - en-GB
+                  - en-IE
+                  - en-NZ
+                  - en-SG
+                  - en-US
+                  - en-ZA
+                  - es-AR
+                  - es-CL
+                  - es-CO
+                  - es-ES
+                  - es-MX
+                  - es-PE
+                  - es-UY
+                  - es-VE
+                  - et-EE
+                  - fa-IR
+                  - fi-FI
+                  - fr-CH
+                  - fr-FR
+                  - he-IL
+                  - hi-IN
+                  - hr-HR
+                  - id-ID
+                  - it-IT
+                  - ja-JP
+                  - ko-KR
+                  - lt-LT
+                  - lv-LV
+                  - ms-MY
+                  - nl-BE
+                  - nl-NL
+                  - nn-NO
+                  - pl-PL
+                  - pt-BR
+                  - pt-PT
+                  - ro-RO
+                  - ru-RU
+                  - sv-SE
+                  - th-TH
+                  - tr-TR
+                  - uk-UA
+                  - vi-VN
+                  - zh-CN
+                  - zh-HK
+                  - zh-TW
+                default: en-US
+              opt_network_connect:
+                description: Enable or disable network connectivity for the virtual machine.
+                type: boolean
+                default: true
+              opt_network_fakenet:
+                description: Enable or disable FakeNet, which simulates network behavior without
+                  actual internet access.
+                type: boolean
+                default: false
+              opt_network_tor:
+                description: Enable or disable TOR browsing.
+                type: boolean
+                default: false
+              opt_network_geo:
+                description: Specify the geographic location for TOR traffic (if TOR is
+                  enabled).
+                type: string
+                enum:
+                  - fastest
+                  - AU
+                  - BR
+                  - CH
+                  - DE
+                  - FR
+                  - GB
+                  - IT
+                  - KR
+                  - RU
+                  - US
+                default: fastest
+              opt_network_mitm:
+                description: Enable or disable HTTPS Man-in-the-Middle (MITM) proxy
+                  interception.
+                type: boolean
+                default: false
+              opt_network_residential_proxy:
+                description: Enable or disable residential proxy for network traffic.
+                type: boolean
+                default: false
+              opt_network_residential_proxy_geo:
+                description: Specify the geographic location for the residential proxy (if
+                  enabled).
+                type: string
+                enum:
+                  - fastest
+                  - AD
+                  - AE
+                  - AF
+                  - AG
+                  - AL
+                  - AM
+                  - AO
+                  - AR
+                  - AT
+                  - AU
+                  - AZ
+                  - BA
+                  - BB
+                  - BD
+                  - BE
+                  - BF
+                  - BG
+                  - BH
+                  - BI
+                  - BJ
+                  - BN
+                  - BO
+                  - BR
+                  - BS
+                  - BT
+                  - BW
+                  - BY
+                  - BZ
+                  - CA
+                  - CD
+                  - CF
+                  - CG
+                  - CH
+                  - CI
+                  - CL
+                  - CM
+                  - CN
+                  - CO
+                  - CR
+                  - CU
+                  - CV
+                  - CW
+                  - CY
+                  - CZ
+                  - DE
+                  - DJ
+                  - DK
+                  - DM
+                  - DO
+                  - DZ
+                  - EC
+                  - EE
+                  - EG
+                  - ES
+                  - ET
+                  - FI
+                  - FJ
+                  - FR
+                  - GA
+                  - GB
+                  - GD
+                  - GE
+                  - GF
+                  - GH
+                  - GM
+                  - GN
+                  - GP
+                  - GQ
+                  - GR
+                  - GT
+                  - GU
+                  - GW
+                  - GY
+                  - HK
+                  - HN
+                  - HR
+                  - HT
+                  - HU
+                  - ID
+                  - IE
+                  - IL
+                  - IM
+                  - IN
+                  - IQ
+                  - IR
+                  - IS
+                  - IT
+                  - JE
+                  - JM
+                  - JO
+                  - JP
+                  - KE
+                  - KG
+                  - KH
+                  - KR
+                  - KW
+                  - KY
+                  - KZ
+                  - LA
+                  - LB
+                  - LC
+                  - LK
+                  - LR
+                  - LS
+                  - LT
+                  - LU
+                  - LV
+                  - LY
+                  - MA
+                  - MD
+                  - ME
+                  - MG
+                  - MK
+                  - ML
+                  - MM
+                  - MN
+                  - MO
+                  - MQ
+                  - MR
+                  - MT
+                  - MU
+                  - MW
+                  - MX
+                  - MY
+                  - MZ
+                  - NA
+                  - NE
+                  - NG
+                  - NI
+                  - NL
+                  - NO
+                  - NP
+                  - NZ
+                  - OM
+                  - PA
+                  - PE
+                  - PF
+                  - PG
+                  - PH
+                  - PK
+                  - PL
+                  - PR
+                  - PS
+                  - PT
+                  - PY
+                  - QA
+                  - RE
+                  - RO
+                  - RS
+                  - RU
+                  - RW
+                  - SA
+                  - SC
+                  - SD
+                  - SE
+                  - SG
+                  - SI
+                  - SK
+                  - SL
+                  - SN
+                  - SO
+                  - SR
+                  - SS
+                  - SV
+                  - SX
+                  - SY
+                  - SZ
+                  - TD
+                  - TG
+                  - TH
+                  - TJ
+                  - TN
+                  - TR
+                  - TT
+                  - TW
+                  - TZ
+                  - UA
+                  - UG
+                  - US
+                  - UY
+                  - UZ
+                  - VE
+                  - VI
+                  - VN
+                  - YE
+                  - YT
+                  - ZA
+                  - ZM
+                  - ZW
+                default: fastest
+              opt_privacy_type:
+                description: Specify the visibility of analysis results.
+                type: string
+                enum:
+                  - public
+                  - bylink
+                  - owner
+                  - byteam
+                default: bylink
+              opt_timeout:
+                description: Set the execution time for the analysis in seconds. Maximum allowed
+                  value depends on the subscription plan.
+                type: number
+                minimum: 10
+                maximum: 1200
+                default: 60
+              opt_automated_interactivity:
+                description: Enable or disable Automated Interactivity (ML) feature, which
+                  simulates user interactions.
+                type: boolean
+                default: true
+              opt_auto_delete_after:
+                description: Specify after what period of time this report should be deleted.
+                type: string
+                enum:
+                  - day
+                  - week
+                  - 2 weeks
+                  - month
+              obj_ext_startfolder:
+                description: >
+                  Specify the starting location for the file. This parameter
+                  also has the following restrictions:
+                    - allowed values for *windows*: `desktop`, `home`, `downloads`, `appdata`, `temp` (default), `windows`, `root`;
+                    - allowed values for *linux*: `desktop`, `home`, `downloads`, `temp` (default);
+                    - allowed values for *android*: `downloads` (default);
+                    - allowed values for *macos*: `desktop`, `home`, `downloads`, `temp` (default);
+                type: string
+                enum:
+                  - desktop
+                  - home
+                  - downloads
+                  - appdata
+                  - temp
+                  - windows
+                  - root
+              obj_ext_cmd:
+                description: "Provide optional commands via cmd. This parameter **MUST** only be
+                  used with `obj_type`: `file` or `obj_type`: `download`."
+                type: string
+              obj_ext_browser:
+                description: >
+                  Specify the browser to use for URL-based analysis. This
+                  parameter **MUST** only be used with `obj_type`: `url`. This
+                  parameter also has the following restrictions:
+                    - allowed values for *windows*: `Internet Explorer`, `Microsoft Edge` (default), `Google Chrome`, `Mozilla Firefox`;
+                    - allowed values for *linux*: `Google Chrome` (default), `Mozilla Firefox`;
+                    - allowed values for *android*: -;
+                    - allowed values for *macos*: `Safari` (default), `Google Chrome`, `Mozilla Firefox`;
+                type: string
+                enum:
+                  - Internet Explorer
+                  - Microsoft Edge
+                  - Google Chrome
+                  - Mozilla Firefox
+                  - Safari
+              obj_ext_useragent:
+                description: "Specify the user agent. This parameter **MUST** only be used with
+                  `obj_type`: `download`."
+                type: string
+              obj_ext_elevateprompt:
+                deprecated: true
+                description: Specify whether to prompt for elevation to administrator privileges
+                  before running the file on Windows. Not applicable to Linux.
+                  (Deprecated. Please use `obj_force_elevation` instead.)
+                type: boolean
+                default: false
+              obj_force_elevation:
+                description: Specify whether to force the file to execute with elevated
+                  privileges and an elevated token (for PE32, PE32+, PE64 files
+                  only). Not applicable for Linux.
+                type: boolean
+                default: false
+              auto_confirm_uac:
+                description: Enable or disable automatic confirmation of User Account Control
+                  (UAC) prompts on Windows. Not applicable to Linux, use
+                  run_as_root instead.
+                type: boolean
+                default: true
+              run_as_root:
+                description: Allow the file to run with superuser privileges on Linux. Not
+                  applicable to Windows, use auto_confirm_uac instead.
+                type: boolean
+                default: false
+              obj_ext_extension:
+                description: Specify whether to change the file extension to a valid one.
+                type: boolean
+              opt_privacy_hidesource:
+                description: "Specify whether to hide the source URL. This parameter **MUST**
+                  only be used with `obj_type`: `download`."
+                type: boolean
+                default: false
+              user_tags:
+                description: "Append user tags to new analysis. Only characters a-z, A-Z, 0-9,
+                  hyphen (-), and comma (,) are allowed. Max tag length: 16
+                  characters. Max unique tags per task: 8."
+                type: string
+            required:
+              - obj_type
+  schemas:
+    UuidDto:
+      title: UUID
+      description: Unique identifier (UUID) of the object.
+      type: string
+      format: uuid
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+    ThreatLevelTextDto:
+      title: Threat level (text)
+      description: Textual description of the overall threat level.
+      type: string
+      oneOf:
+        - description: Indicates that detected threat level is `undetected`.
+          const: No threats detected
+        - description: Indicates that detected threat level is `suspicious`.
+          const: Suspicious activity
+        - description: Indicates that detected threat level is `malicious`.
+          const: Malicious activity
+    TagsDto:
+      title: Tags
+      description: Tags.
+      type: array
+      uniqueItems: true
+      minItems: 0
+      items:
+        oneOf:
+          - type: string
+          - type: object
+            additionalProperties: false
+            properties:
+              users:
+                description: Indicates if the tag is set by users.
+                type: boolean
+              tag:
+                description: The tag text.
+                type: string
+            required:
+              - users
+              - tag
+    HashesApiDto:
+      title: Hashes
+      description: Object's hashes
+      type: object
+      additionalProperties: false
+      properties:
+        md5:
+          description: MD5 hash string.
+          type: string
+          pattern: ^[0-9a-f]{32}$
+        sha1:
+          description: SHA1 hash string.
+          type: string
+          pattern: ^[0-9a-f]{40}$
+        sha256:
+          description: SHA256 hash string.
+          type: string
+          pattern: ^[0-9a-f]{64}$
+        ssdeep:
+          description: SSDEEP hash string.
+          type: string
+      required:
+        - md5
+    TaskHistoryDto:
+      title: Task history
+      description: Previously ran task.
+      type: object
+      additionalProperties: false
+      properties:
+        uuid:
+          $ref: "#/components/schemas/UuidDto"
+        verdict:
+          $ref: "#/components/schemas/ThreatLevelTextDto"
+        name:
+          description: Name of the main object.
+          type: string
+        related:
+          description: URL of the main analysis report.
+          type: string
+          format: uri
+          pattern: ^https://([0-9a-z]+\.){2}[0-9a-z]+/tasks/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        pcap:
+          description: URL for downloading PCAP file from the task.
+          type: string
+          format: uri
+          pattern: ^https://([0-9a-z]+\.){2}[0-9a-z]+/tasks/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/download/pcap$
+        file:
+          description: URL for downloading the main object from the task.
+          type: string
+          format: uri
+          pattern: ^https://([0-9a-z]+\.){2}[0-9a-z]+/tasks/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/download/files/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        json:
+          description: URL of the JSON report.
+          type: string
+          format: uri
+          pattern: ^https://([0-9a-z]+\.){2}[0-9a-z]+/report/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/summary/json$
+        misp:
+          description: URL of the MISP report.
+          type: string
+          format: uri
+          pattern: ^https://([0-9a-z]+\.){2}[0-9a-z]+/report/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/summary/misp$
+        date:
+          description: Human-readable timestamp of the analysis creation.
+          type: string
+          format: date-time
+        tags:
+          $ref: "#/components/schemas/TagsDto"
+        hashes:
+          $ref: "#/components/schemas/HashesApiDto"
+      required:
+        - uuid
+        - verdict
+        - related
+        - json
+        - misp
+        - date
+        - tags
+        - hashes
+    TasksHistoryDto:
+      title: Tasks history
+      description: List of previously ran tasks.
+      type: array
+      uniqueItems: true
+      minItems: 0
+      items:
+        $ref: "#/components/schemas/TaskHistoryDto"
+    ErrorDocumentDto:
+      title: Error response document
+      description: Top level error response document.
+      type: object
+      additionalProperties: false
+      properties:
+        error:
+          description: True indicates a failed request.
+          type: boolean
+          const: true
+        message:
+          description: Provides information about the error.
+          type: string
+      required:
+        - error
+        - message
+    TaskSubmitDto:
+      title: Task submit
+      description: Submit a file or a URL for malware analysis
+      type: object
+      additionalProperties: false
+      properties:
+        error:
+          description: False indicates a successful request.
+          type: boolean
+          const: false
+        data:
+          description: Submitted task data
+          type: object
+          additionalProperties: false
+          properties:
+            taskid:
+              description: Unique identifier (UUID) of the task.
+              $ref: "#/components/schemas/UuidDto"
+          required:
+            - taskid
+      required:
+        - error
+        - data
+    TaskSubmitQueuedDto:
+      title: Task submit queued
+      description: File or URL submitted for malware analysis and queued for processing
+      type: object
+      additionalProperties: false
+      properties:
+        error:
+          description: False indicates a successful request.
+          type: boolean
+          const: false
+        message:
+          description: Contains a response message about the task status.
+          type: string
+          const: false
+        data:
+          description: Submitted task data
+          type: object
+          additionalProperties: false
+          properties:
+            queueTaskId:
+              description: Unique identifier (UUID) of the task in queue.
+              $ref: "#/components/schemas/UuidDto"
+          required:
+            - queueTaskId
+      required:
+        - error
+        - data
+    UserPlanNameDto:
+      title: Subscription plan
+      description: Name of the user's sandbox plan.
+      type: string
+      oneOf:
+        - title: Free
+          const: Free
+        - title: Tester
+          const: Tester
+        - title: Searcher
+          const: Searcher
+        - title: Trial Hunter
+          const: Trial Hunter
+        - title: Hunter
+          const: Hunter
+        - title: Ally
+          const: Ally
+        - title: Trial Enterprise
+          const: Trial Enterprise
+        - title: Enterprise
+          const: Enterprise
+        - title: Enterprise Suite
+          const: Enterprise Suite
+    PrivacyDto:
+      title: Privacy setting
+      description: Privacy level.
+      type: string
+      oneOf:
+        - description: Indicates that chosen privacy level is `public`.
+          const: public
+        - description: Indicates that chosen privacy level is `bylink`.
+          const: bylink
+        - description: Indicates that chosen privacy level is `owner`.
+          const: owner
+        - description: Indicates that chosen privacy level is `byteam`.
+          const: byteam
+    ReportOptionsDto:
+      type: object
+      additionalProperties: false
+      properties:
+        timeout:
+          description: Timeout for analysis in seconds.
+          type: integer
+          format: int32
+          minimum: 0
+        additionalTime:
+          description: Additional time in seconds.
+          type: integer
+          format: int32
+          minimum: 0
+        fakeNet:
+          description: Indicates if fake networking was used.
+          type: boolean
+        heavyEvasion:
+          description: Indicates if heavy evasion techniques were used.
+          type: boolean
+        mitm:
+          description: Indicates if man-in-the-middle was used.
+          type: boolean
+        presentation:
+          description: Indicates if presentation mode was on.
+          type: boolean
+        video:
+          description: Indicates if video recording was on.
+          type: boolean
+        hideSource:
+          description: Indicates if source hiding was enabled.
+          type: boolean
+        network:
+          description: Indicates if network activity was enabled.
+          type: boolean
+        privacy:
+          $ref: "#/components/schemas/PrivacyDto"
+        privateSample:
+          description: Indicates if the task is private.
+          type: boolean
+        tor:
+          type: object
+          additionalProperties: false
+          properties:
+            used:
+              description: Indicates if TOR was used.
+              type: boolean
+            geo:
+              description: Indicates chosen TOR geolocation option.
+              type: string
+          required:
+            - used
+        automatization:
+          type: object
+          additionalProperties: false
+          properties:
+            interactivity:
+              description: Indicates if interactivity automation was enabled.
+              type: boolean
+            uac:
+              description: Indicates if UAC was enabled.
+              type: boolean
+          required:
+            - uac
+    ReportVerdictDto:
+      type: object
+      additionalProperties: false
+      properties:
+        score:
+          description: Numeric score of the analysis.
+          type: number
+        threatLevel:
+          description: Threat level of the analysis.
+          type: number
+        threatLevelText:
+          $ref: "#/components/schemas/ThreatLevelTextDto"
+      required:
+        - score
+        - threatLevel
+        - threatLevelText
+    ReportSpecsDto:
+      type: object
+      additionalProperties: false
+      properties:
+        autoStart:
+          description: Indicates if threat uses autostart feature.
+          type: boolean
+        cpuOverrun:
+          description: Indicates if overly high CPU usage was detected.
+          type: boolean
+        crashedApps:
+          description: Indicates if any application crash was detected.
+          type: boolean
+        crashedTask:
+          description: Indicates if analysis task crash was detected.
+          type: boolean
+        debugOutput:
+          description: Indicates if any debug data was extracted.
+          type: boolean
+        executableDropped:
+          description: Indicates if threat uses dropped executables.
+          type: boolean
+        exploitable:
+          description: Indicates if any known exploit was detected.
+          type: boolean
+        injects:
+          description: Indicates if threat uses injections.
+          type: boolean
+        knownThreat:
+          description: Indicates if known malware was detected.
+          type: boolean
+        lowAccess:
+          description: Indicates if threat uses low level access.
+          type: boolean
+        malwareConfig:
+          description: Indicates if malware config was extracted from submitted file.
+          type: boolean
+        memOverrun:
+          description: Indicates if overly high RAM usage was detected.
+          type: boolean
+        multiprocessing:
+          description: Indicates if threat uses multiprocessing.
+          type: boolean
+        networkLoader:
+          description: Indicates if network download was detected.
+          type: boolean
+        networkThreats:
+          description: Indicates if any network-related threat was detected by Suricata
+            engine.
+          type: boolean
+        notStarted:
+          description: Indicates if submitted file execution failed.
+          type: boolean
+        privEscalation:
+          description: Indicates if any privilege escalation technique was detected.
+          type: boolean
+        rebooted:
+          description: Indicates if system reboot was detected.
+          type: boolean
+        serviceLauncher:
+          description: Indicates if new service registration was detected.
+          type: boolean
+        spam:
+          description: Indicates if spam was detected.
+          type: boolean
+        staticDetections:
+          description: Indicates if any malicious pattern was detected by static analysis
+            engine.
+          type: boolean
+        stealing:
+          description: Indicates if malware 'stealer' capability was detected.
+          type: boolean
+        suspStruct:
+          type: boolean
+        torUsed:
+          description: Indicates if TOR traffic routing was enabled during task creation.
+          type: boolean
+    TaskTypeDto:
+      title: Task type
+      description: Type of the main object.
+      type: string
+      oneOf:
+        - description: Indicates that the main object's type is `file`.
+          const: file
+        - description: Indicates that the main object's type is `url`.
+          const: url
+        - description: Indicates that the main object's type is `download`.
+          const: download
+    ObjectTridDto:
+      type: object
+      additionalProperties: false
+      properties:
+        procent:
+          description: Confidence score (%).
+          type: number
+          format: float
+        extension:
+          description: Identified file format.
+          type: string
+        filetype:
+          description: Identified file type.
+          type: string
+      required:
+        - procent
+        - extension
+        - filetype
+    ReportMainObjectDto:
+      type: object
+      additionalProperties: false
+      properties:
+        type:
+          $ref: "#/components/schemas/TaskTypeDto"
+        permanentUrl:
+          description: URL for downloading the main object from the task.
+          type: string
+          format: uri
+          pattern: ^https://([0-9a-z]+\.){2}[0-9a-z]+/tasks/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/download/files/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]+$
+        filename:
+          description: Name of the main object file.
+          type: string
+        basename:
+          description: Submitted file name/url.
+          type: string
+        url:
+          description: Full URL.
+          type: string
+          format: uri-reference
+        hashes:
+          $ref: "#/components/schemas/HashesApiDto"
+        info:
+          type: object
+          additionalProperties: false
+          properties:
+            ext:
+              description: Detected extension.
+              type: string
+            file:
+              description: Detected file type.
+              type: string
+            mime:
+              description: Detected mime-type.
+              type: string
+            exif:
+              type: object
+              maxProperties: 1
+              additionalProperties:
+                type: object
+                additionalProperties:
+                  type:
+                    - string
+                    - integer
+                    - number
+            trid:
+              type: array
+              uniqueItems: true
+              minItems: 1
+              items:
+                $ref: "#/components/schemas/ObjectTridDto"
+          required:
+            - ext
+            - file
+            - mime
+            - exif
+            - trid
+      required:
+        - type
+        - hashes
+    ScreenshotDto:
+      type: object
+      additionalProperties: false
+      properties:
+        uuid:
+          $ref: "#/components/schemas/UuidDto"
+        time:
+          description: Timestamp of the screenshot.
+          type: integer
+          format: int32
+        permanentUrl:
+          description: URL for downloading the screenshot from the task.
+          type: string
+          format: uri
+          pattern: ^https://([0-9a-z]+\.){2}[0-9a-z]+/tasks/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/download/screens/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/image\.jpeg$
+        thumbnailUrl:
+          description: URL for downloading the screenshot thumbnail from the task.
+          type: string
+          format: uri
+          pattern: ^https://([0-9a-z]+\.){2}[0-9a-z]+/tasks/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/download/thumbnails/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/image\.jpeg$
+      required:
+        - uuid
+        - time
+        - permanentUrl
+        - thumbnailUrl
+    ProcessDumpDto:
+      type: object
+      additionalProperties: false
+      properties:
+        taskUUID:
+          $ref: "#/components/schemas/UuidDto"
+        fileNumber:
+          type: integer
+          format: int32
+        permanentUrl:
+          description: URL for downloading process dump from the task.
+          type: string
+          format: uri
+          pattern: ^https://([0-9a-z]+\.){2}[0-9a-z]+/tasks/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/download/dumps/[0-9a-f]{24}$
+        timestamp:
+          description: Timestamp of the process dump.
+          type: integer
+          format: int64
+        processName:
+          description: Filename of the process.
+          type: string
+        pid:
+          description: Process ID.
+          type: integer
+          format: int32
+          minimum: 0
+        address:
+          type: string
+        size:
+          description: Size of the process dump.
+          type: integer
+          format: int32
+          minimum: 0
+      required:
+        - taskUUID
+        - fileNumber
+        - permanentUrl
+    OsDto:
+      title: OS name
+      description: Operating system name.
+      type: string
+      oneOf:
+        - description: Indicates that chosen operating system type is `windows`.
+          pattern: ^[Ww]indows$
+        - description: Indicates that chosen operating system type is `linux`.
+          pattern: ^[Ll]inux$
+        - description: Indicates that chosen operating system type is `android`.
+          pattern: ^[Aa]ndroid$
+        - description: Indicates that chosen operating system type is `macos`.
+          pattern: ^[Mm]acos$
+    OsBitnessDto:
+      title: OS bitness
+      description: Operating system bitness.
+      type: integer
+      format: int32
+      oneOf:
+        - const: 32
+        - const: 64
+    OsVersionDto:
+      title: OS version
+      description: Operating system major version.
+      type: string
+      oneOf:
+        - description: Indicates that operating system major version is `7`.
+          const: "7"
+        - description: Indicates that operating system major version is `10`.
+          const: "10"
+        - description: Indicates that operating system major version is `11`.
+          const: "11"
+        - description: Indicates that operating system major version is `12.2`.
+          const: "12.2"
+        - description: Indicates that operating system major version is `22.04.2`.
+          const: 22.04.2
+        - description: Indicates that operating system major version is `14`.
+          const: "14"
+        - description: Indicates that operating system major version is `15`.
+          const: "15"
+        - description: Indicates that operating system major version is `server 2025`.
+          const: server 2025
+    EnvTypeDto:
+      title: Environment type
+      description: Pre-installed soft set.
+      type: string
+      oneOf:
+        - description: (**Deprecated**) Indicates that chosen soft set type is `clean`.
+          const: clean
+          deprecated: true
+        - description: (**Deprecated**) Indicates that chosen soft set type is `office`.
+          const: office
+          deprecated: true
+        - description: Indicates that chosen soft set type is `complete`.
+          const: complete
+        - description: Indicates that chosen soft set type is `development`.
+          const: development
+        - description: Indicates that chosen soft set type is `safebrowsing`.
+          const: safebrowsing
+    ReportSoftwareDto:
+      type: object
+      additionalProperties: false
+      properties:
+        title:
+          description: Installed software name.
+          type: string
+        version:
+          description: Installed software version.
+          type: string
+      required:
+        - title
+    ReportHotfixDto:
+      type: object
+      additionalProperties: false
+      properties:
+        title:
+          description: Installed operating system hotfixes.
+          type: string
+      required:
+        - title
+    ReportEnvironmentDto:
+      type: object
+      additionalProperties: false
+      properties:
+        os:
+          type: object
+          additionalProperties: false
+          properties:
+            title:
+              description: Name of the operating system used.
+              type: string
+            build:
+              description: Operating system build.
+              type: integer
+              format: int32
+            product:
+              $ref: "#/components/schemas/OsDto"
+            variant:
+              description: Operating system edition.
+              type: string
+            productType:
+              description: Client/Server.
+              type: string
+              oneOf:
+                - const: Client
+                - const: Server
+            bitness:
+              $ref: "#/components/schemas/OsBitnessDto"
+            major:
+              $ref: "#/components/schemas/OsVersionDto"
+            servicePack:
+              description: Latest service pack installed.
+              type: string
+            softSet:
+              $ref: "#/components/schemas/EnvTypeDto"
+          required:
+            - product
+            - productType
+            - major
+            - softSet
+            - bitness
+        internetExplorer:
+          type: object
+          additionalProperties: false
+          properties:
+            version:
+              description: Latest Internet Explorer version.
+              type: string
+            kbnum:
+              description: Latest Internet Explorer patch.
+              type: string
+          required:
+            - version
+            - kbnum
+        software:
+          type: array
+          uniqueItems: true
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/ReportSoftwareDto"
+        hotfixes:
+          type: array
+          uniqueItems: true
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/ReportHotfixDto"
+      required:
+        - os
+        - software
+    ReportCountersDto:
+      type: object
+      additionalProperties: false
+      properties:
+        processes:
+          type: object
+          additionalProperties: false
+          properties:
+            total:
+              description: Total task processes.
+              type: integer
+              format: int32
+              minimum: 1
+            monitored:
+              description: Monitored processes count.
+              type: integer
+              format: int32
+              minimum: 0
+            suspicious:
+              description: Suspicious processes count.
+              type: integer
+              format: int32
+              minimum: 0
+            malicious:
+              description: Malicious processes count.
+              type: integer
+              format: int32
+              minimum: 0
+          required:
+            - total
+            - monitored
+            - suspicious
+            - malicious
+        network:
+          type: object
+          additionalProperties: false
+          properties:
+            http:
+              description: HTTP requests count.
+              type: integer
+              format: int32
+              minimum: 0
+            connections:
+              description: Network connections count.
+              type: integer
+              format: int32
+              minimum: 0
+            dns:
+              description: DNS requests count.
+              type: integer
+              format: int32
+              minimum: 0
+            threats:
+              description: Network threats count.
+              type: integer
+              format: int32
+              minimum: 0
+          required:
+            - http
+            - connections
+            - dns
+            - threats
+        files:
+          type: object
+          additionalProperties: false
+          properties:
+            unknown:
+              description: Unknown files count.
+              type: integer
+              format: int32
+              minimum: 0
+            text:
+              description: Plain text files count.
+              type: integer
+              format: int32
+              minimum: 0
+            suspicious:
+              description: Suspicious files count.
+              type: integer
+              format: int32
+              minimum: 0
+            malicious:
+              description: Malicious files count.
+              type: integer
+              format: int32
+              minimum: 0
+          required:
+            - unknown
+            - text
+            - suspicious
+            - malicious
+        registry:
+          type: object
+          additionalProperties: false
+          properties:
+            total:
+              description: Total registry requests count.
+              type: integer
+              format: int32
+              minimum: 0
+            read:
+              description: Registry read request count.
+              type: integer
+              format: int32
+              minimum: 0
+            write:
+              description: Registry write request count.
+              type: integer
+              format: int32
+              minimum: 0
+            delete:
+              description: Registry delete count.
+              type: integer
+              format: int32
+              minimum: 0
+          required:
+            - total
+            - read
+            - write
+            - delete
+        synchronization:
+          type: object
+          additionalProperties: false
+          properties:
+            total:
+              description: Total number of detected synchronization objects.
+              type: integer
+              format: int32
+              minimum: 0
+            operation:
+              type: object
+              additionalProperties: false
+              properties:
+                open:
+                  description: Number of times any synchronization object was opened.
+                  type: integer
+                  format: int32
+                  minimum: 0
+                create:
+                  description: Number of times any synchronization object was created.
+                  type: integer
+                  format: int32
+                  minimum: 0
+              required:
+                - open
+                - create
+            type:
+              type: object
+              additionalProperties: false
+              properties:
+                mutex:
+                  type: integer
+                  format: int32
+                  minimum: 0
+                event:
+                  type: integer
+                  format: int32
+                  minimum: 0
+              required:
+                - mutex
+                - event
+          required:
+            - total
+            - operation
+            - type
+      required:
+        - processes
+        - network
+        - files
+        - registry
+        - synchronization
+    ReportProcessSpecsDto:
+      type: object
+      additionalProperties: false
+      properties:
+        autoStart:
+          description: Indicates if application was added to autostart.
+          type: boolean
+        crashedApps:
+          description: Indicates if application crashed.
+          type: boolean
+        debugOutput:
+          description: Indicates if application has debug output message.
+          type: boolean
+        executableDropped:
+          description: Indicates if process dropped executable file.
+          type: boolean
+        exploitable:
+          description: Indicates if any known exploit was detected.
+          type: boolean
+        injects:
+          description: Indicates if process was injected.
+          type: boolean
+        knownThreat:
+          description: Indicates if known malware was detected.
+          type: boolean
+        lowAccess:
+          description: Indicates if process gaines low level access to HDD.
+          type: boolean
+        network:
+          description: Indicates if process has network activity.
+          type: boolean
+        networkLoader:
+          description: Indicates if the process downloads content from the internet.
+          type: boolean
+        stealing:
+          description: Indicates if process steals info from infected machine.
+          type: boolean
+        privEscalation:
+          description: Indicates if process escalates privileges.
+          type: boolean
+        malwareConfig:
+          description: Indicates if malware configuration was extracted.
+          type: boolean
+    ReportProcessModuleDto:
+      type: object
+      additionalProperties: false
+      properties:
+        time:
+          type: integer
+          format: int64
+        image:
+          type: string
+      required:
+        - time
+        - image
+    ReportProcessDto:
+      type: object
+      additionalProperties: false
+      properties:
+        pid:
+          description: Process ID.
+          type: integer
+          format: int32
+          minimum: 0
+        ppid:
+          description: Parent process ID.
+          type: integer
+          format: int32
+          minimum: 0
+        uuid:
+          $ref: "#/components/schemas/UuidDto"
+        parentUUID:
+          $ref: "#/components/schemas/UuidDto"
+        important:
+          description: Indicates if process is marked as important.
+          type: boolean
+        image:
+          description: Image of the executable file.
+          type: string
+        commandLine:
+          description: command line of the process.
+          type: string
+        fileName:
+          description: Filename of the process.
+          type: string
+        fileType:
+          description: Process file type.
+          type: string
+        mainProcess:
+          description: Indicates that this is the main process.
+          type: boolean
+        times:
+          type: object
+          additionalProperties: false
+          properties:
+            start:
+              description: Process start timestamp.
+              type: integer
+              format: int64
+            terminate:
+              description: Process termination timestamp.
+              type: integer
+              format: int64
+            monitoringSince:
+              description: Process monitoring timestamp.
+              type: integer
+              format: int64
+        versionInfo:
+          type: object
+          additionalProperties: false
+          properties:
+            company:
+              description: Name of the company.
+              type: string
+            description:
+              description: Short description of software.
+              type: string
+            version:
+              description: Process version.
+              type: string
+          required:
+            - version
+        cert:
+          type: object
+          additionalProperties: false
+          properties:
+            SN:
+              type: string
+            status:
+              type: integer
+              format: int32
+              minimum: 0
+            contentHash:
+              type: string
+            thumbprint:
+              type: string
+          required:
+            - SN
+            - status
+            - contentHash
+            - thumbprint
+        resolvedCOM:
+          type: object
+          additionalProperties: false
+          properties:
+            title:
+              type: string
+            module:
+              type: object
+              additionalProperties: false
+              properties:
+                fullPath:
+                  type: string
+                fileName:
+                  type: string
+              required:
+                - fullPath
+                - fileName
+          required:
+            - title
+        context:
+          type: object
+          additionalProperties: false
+          properties:
+            rebootNumber:
+              description: Number of reboots during the analysis.
+              type: integer
+              format: int32
+              minimum: 0
+            integrityLevel:
+              description: Integrity level.
+              type: string
+            userName:
+              description: User name.
+              type: string
+          required:
+            - rebootNumber
+            - userName
+        scores:
+          type: object
+          additionalProperties: false
+          properties:
+            monitoringReason:
+              description: Reason why the process is being monitored.
+              type: string
+            dropped:
+              description: indicates if something was dropped by process.
+              type: boolean
+            injected:
+              description: Indicates if process was injected.
+              type: boolean
+            loadsSusp:
+              type: boolean
+            verdict:
+              $ref: "#/components/schemas/ReportVerdictDto"
+            specs:
+              $ref: "#/components/schemas/ReportProcessSpecsDto"
+          required:
+            - dropped
+            - injected
+            - loadsSusp
+            - verdict
+            - specs
+        threatName:
+          description: Known threats discovered during analysis.
+          type: string
+        status:
+          description: Indicates if the task is still running.
+          type: string
+        exitCode:
+          description: Process exit code.
+          type: integer
+          format: int64
+        hasMalwareConfig:
+          description: Indicates if the process has malware configuration.
+          type: boolean
+        modules:
+          description: Modules loaded by the process.
+          type: array
+          uniqueItems: true
+          minItems: 0
+          items:
+            $ref: "#/components/schemas/ReportProcessModuleDto"
+        synchronization:
+          description: Synchronization objects used by the process.
+          type: array
+          uniqueItems: true
+          minItems: 0
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              time:
+                type: integer
+                format: int64
+              name:
+                description: Name of the synchronization object.
+                type: string
+              type:
+                description: Type of the synchronization object.
+                type: string
+              operation:
+                type: string
+            required:
+              - time
+              - name
+              - type
+              - operation
+      required:
+        - pid
+        - important
+        - status
+    ReportDnsRequestDto:
+      type: object
+      additionalProperties: false
+      properties:
+        time:
+          description: DNS request timestamp.
+          type: integer
+          format: int64
+        domain:
+          description: DNS request domain.
+          type: string
+        ips:
+          description: DNS response IP addresses.
+          type: array
+          uniqueItems: true
+          minItems: 0
+          items:
+            type: string
+            oneOf:
+              - format: ipv4
+              - format: ipv6
+        reputation:
+          description: Textual description of the threat level of the domain.
+          type: string
+        reputationNumber:
+          description: Threat level of the domain.
+          type: integer
+          format: int32
+      required:
+        - time
+        - domain
+        - ips
+    ReportHttpRequestDto:
+      type: object
+      additionalProperties: false
+      properties:
+        time:
+          description: HTTP request timestamp.
+          type: integer
+          format: int64
+        method:
+          description: HTTP request method.
+          type: string
+          oneOf:
+            - description: Indicates that detected HTTP method is `GET`.
+              const: GET
+            - description: Indicates that detected HTTP method is `HEAD`.
+              const: HEAD
+            - description: Indicates that detected HTTP method is `OPTIONS`.
+              const: OPTIONS
+            - description: Indicates that detected HTTP method is `TRACE`.
+              const: TRACE
+            - description: Indicates that detected HTTP method is `PUT`.
+              const: PUT
+            - description: Indicates that detected HTTP method is `DELETE`.
+              const: DELETE
+            - description: Indicates that detected HTTP method is `POST`.
+              const: POST
+            - description: Indicates that detected HTTP method is `PATCH`.
+              const: PATCH
+            - description: Indicates that detected HTTP method is `CONNECT`.
+              const: CONNECT
+        host:
+          description: HTTP request server.
+          type: string
+        url:
+          description: Full URL of the HTTP request.
+          type: string
+          format: uri
+        ip:
+          description: IP address of the HTTP request.
+          type: string
+          oneOf:
+            - format: ipv4
+            - format: ipv6
+        port:
+          description: TCP port of the HTTP request.
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 65535
+        proxyDetected:
+          description: Indicates if proxy was detected.
+          type: boolean
+        user-agent:
+          description: User-agent of the HTTP request.
+          type: string
+        status:
+          description: HTTP response status.
+          type: string
+        httpCode:
+          description: HTTP response code.
+          type: integer
+          format: int32
+        process:
+          description: ID of the process invoking HTTP request.
+          type: string
+        reputation:
+          description: Detected reputation.
+          type: string
+        country:
+          description: Country name detected by IP.
+          type: string
+        body:
+          type: object
+          additionalProperties: false
+          properties:
+            request:
+              description: HTTP request body.
+              type: object
+              additionalProperties: false
+              properties:
+                size:
+                  type: integer
+                  format: int64
+                type:
+                  type: string
+                threatLevel:
+                  type: string
+                permanentURL:
+                  type: string
+                  format: uri
+                hashes:
+                  $ref: "#/components/schemas/HashesApiDto"
+              required:
+                - size
+                - hashes
+            response:
+              description: HTTP response body.
+              type: object
+              additionalProperties: false
+              properties:
+                size:
+                  type: integer
+                  format: int64
+                type:
+                  type: string
+                threatLevel:
+                  type: string
+                permanentURL:
+                  type: string
+                  format: uri
+                hashes:
+                  $ref: "#/components/schemas/HashesApiDto"
+              required:
+                - size
+                - hashes
+      required:
+        - time
+        - method
+        - host
+        - url
+        - ip
+        - port
+        - status
+    ReportConnectionDto:
+      type: object
+      additionalProperties: false
+      properties:
+        ip:
+          description: IP address.
+          type: string
+          oneOf:
+            - format: ipv4
+            - format: ipv6
+        port:
+          description: Used port.
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 65535
+        protocol:
+          description: Used protocol.
+          type: string
+        country:
+          description: Country name detected by IP.
+          type: string
+        asn:
+          type: string
+        time:
+          description: Connection timestamp.
+          type: string
+          format: date-time
+        process:
+          description: ID of the process invoking network connection.
+          type: string
+        tlsFingerprint:
+          type: object
+          additionalProperties: false
+          properties:
+            ja3:
+              type: string
+            ja3Fullstring:
+              type: string
+            ja3S:
+              type: string
+            ja3SFullstring:
+              type: string
+            jarm:
+              type: string
+        reputation:
+          description: Detected reputation.
+          type: string
+      required:
+        - ip
+        - port
+        - protocol
+        - time
+    ReportThreatDto:
+      type: object
+      additionalProperties: false
+      properties:
+        time:
+          description: Threat detection timestamp.
+          type: string
+        dstip:
+          description: Destination IP.
+          type: string
+        srcip:
+          description: Source IP.
+          type: string
+        dstport:
+          description: Destination port.
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 65535
+        srcport:
+          description: Source port.
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 65535
+        sid:
+          description: Suricata rule ID (sid).
+          type: integer
+          format: int32
+          minimum: 1
+        class:
+          description: Short Suricata description.
+          type: string
+        msg:
+          description: Suricata message.
+          type: string
+        pro:
+          description: ETPRO.
+          type: integer
+          format: int32
+        priority:
+          description: Suricata priority.
+          type: integer
+          format: int32
+        process:
+          description: ID of the process that triggered the rule.
+          type: string
+      required:
+        - time
+        - dstip
+        - srcip
+        - dstport
+        - srcport
+        - sid
+    ReportModifiedFileDto:
+      type: object
+      additionalProperties: false
+      properties:
+        time:
+          description: File creation timestamp.
+          type: integer
+          format: int64
+        filename:
+          description: File name.
+          type: string
+        size:
+          description: File size.
+          type: integer
+          format: int64
+          minimum: 0
+        type:
+          description: File type.
+          type: string
+        threatLevel:
+          description: Textual description of the threat level.
+          type: string
+          oneOf:
+            - description: Indicates that detected threat level is `UNKNOWN`.
+              const: UNKNOWN
+            - description: Indicates that detected threat level is `LOW`.
+              const: LOW
+            - description: Indicates that detected threat level is `MID`.
+              const: MID
+            - description: Indicates that detected threat level is `HIGH`.
+              const: HIGH
+        process:
+          type: string
+        permanentUrl:
+          type: string
+          format: uri
+        info:
+          type: object
+          additionalProperties: false
+          properties:
+            file:
+              type: string
+            mime:
+              type: string
+          required:
+            - file
+        hashes:
+          $ref: "#/components/schemas/HashesApiDto"
+      required:
+        - time
+        - filename
+        - size
+        - process
+    ReportModifiedRegistryDto:
+      type: object
+      additionalProperties: false
+      properties:
+        key:
+          type: string
+        name:
+          type: string
+        value:
+          type: string
+        operation:
+          type: string
+        process:
+          type: string
+        time:
+          type: integer
+          format: int64
+      required:
+        - key
+        - name
+        - value
+        - operation
+        - process
+        - time
+    ReportIncidentEventProcessDto:
+      type: object
+      additionalProperties: false
+      properties:
+        _id:
+          type: string
+        time:
+          description: Event detection time.
+          type: string
+          format: date-time
+        image:
+          description: Process executable's full path.
+          type: string
+        cmdline:
+          description: Process command line.
+          type: string
+      required:
+        - time
+        - image
+        - cmdline
+    ReportIncidentEventProcessReloadDto:
+      type: object
+      additionalProperties: false
+      properties:
+        _id:
+          type: string
+        time:
+          description: Event detection time.
+          type: string
+          format: date-time
+        image:
+          description: Process executable's full path.
+          type: string
+        cmdChild:
+          description: Child process command line.
+          type: string
+        cmdParent:
+          description: Parent process command line.
+          type: string
+      required:
+        - time
+        - image
+        - cmdChild
+        - cmdParent
+    ReportIncidentEventProcessYaraDto:
+      type: object
+      additionalProperties: false
+      properties:
+        _id:
+          type: string
+        time:
+          description: Event detection time.
+          type: string
+          format: date-time
+        size:
+          type: string
+        address:
+          type: string
+      required:
+        - time
+        - size
+        - address
+    ReportIncidentEventModuleDto:
+      type: object
+      additionalProperties: false
+      properties:
+        _id:
+          type: string
+        time:
+          description: Event detection time.
+          type: string
+          format: date-time
+        image:
+          description: Process executable's full path.
+          type: string
+        protect:
+          type: string
+          oneOf:
+            - const: EXECUTABLE
+            - const: NON_EXECUTABLE
+        status:
+          type: string
+          oneOf:
+            - const: LOAD
+            - const: UNLOAD
+            - const: SNAP
+      required:
+        - time
+        - image
+        - protect
+        - status
+    ReportIncidentEventFileDto:
+      type: object
+      additionalProperties: false
+      properties:
+        _id:
+          type: string
+        time:
+          description: Event detection time.
+          type: string
+          format: date-time
+        operation:
+          description: Type of operation attempted on a file.
+          type: string
+          oneOf:
+            - description: Indicates that operation attempted on a file is `READ`.
+              const: READ
+            - description: Indicates that operation attempted on a file is `WRITE`.
+              const: WRITE
+            - description: Indicates that operation attempted on a file is `CREATE`.
+              const: CREATE
+            - description: Indicates that operation attempted on a file is `DELETE`.
+              const: DELETE
+            - description: Indicates that operation attempted on a file is `CLOSE`.
+              const: CLOSE
+        device:
+          type: string
+        object:
+          type: string
+        name:
+          description: File's full path.
+          type: string
+        status:
+          type: integer
+          format: int64
+        created:
+          type: string
+        newname:
+          type: string
+        access:
+          type: string
+      required:
+        - time
+        - operation
+        - device
+        - object
+        - name
+        - status
+    ReportIncidentEventFileDropDto:
+      type: object
+      additionalProperties: false
+      properties:
+        _id:
+          type: string
+        time:
+          description: Event detection time.
+          type: string
+          format: date-time
+        filename:
+          description: File's full path.
+          type: string
+        contentType:
+          description: File's content type.
+          type: string
+        size:
+          description: File's size.
+          type: integer
+          format: int32
+        md5:
+          description: MD5 hash string.
+          type: string
+          pattern: ^[0-9a-f]{32}$
+        sha1:
+          description: SHA1 hash string.
+          type: string
+          pattern: ^[0-9a-f]{40}$
+        sha256:
+          description: SHA256 hash string.
+          type: string
+          pattern: ^[0-9a-f]{64}$
+      required:
+        - time
+        - filename
+        - md5
+    ReportIncidentEventRegistryDto:
+      type: object
+      additionalProperties: false
+      properties:
+        _id:
+          type: string
+        time:
+          description: Event detection time.
+          type: string
+          format: date-time
+        operation:
+          description: Type of operation attempted on a registry key.
+          type: string
+          oneOf:
+            - description: Indicates that detected operation is `unknown`.
+              const: unknown
+            - description: Indicates that detected operation is `read`.
+              const: read
+            - description: Indicates that detected operation is `write`.
+              const: write
+            - description: Indicates that detected operation is `delete key`.
+              const: delete key
+            - description: Indicates that detected operation is `delete value`.
+              const: delete value
+        key:
+          description: Registry Key data.
+          type: string
+        name:
+          description: Registry Value name.
+          type: string
+        value:
+          description: Registry Value data.
+          type: string
+        typeValue:
+          description: Registry Value type.
+          type: string
+          oneOf:
+            - description: Indicates that registry Value type is `UNKNOWN`.
+              const: UNKNOWN
+            - description: Indicates that registry Value type is `REG_NONE`.
+              const: REG_NONE
+            - description: Indicates that registry Value type is `REG_SZ`.
+              const: REG_SZ
+            - description: Indicates that registry Value type is `REG_MULTI_SZ`.
+              const: REG_MULTI_SZ
+            - description: Indicates that registry Value type is `REG_BINARY`.
+              const: REG_BINARY
+            - description: Indicates that registry Value type is `REG_DWORD`.
+              const: REG_DWORD
+            - description: Indicates that registry Value type is `REG_QWORD`.
+              const: REG_QWORD
+      required:
+        - time
+        - operation
+        - name
+        - value
+        - key
+        - typeValue
+    ReportIncidentEventIpDto:
+      type: object
+      additionalProperties: false
+      properties:
+        _id:
+          type: string
+        time:
+          description: Event detection timestamp.
+          type: integer
+          format: int64
+        process:
+          description: Process executable's full path.
+          type: string
+        ipDst:
+          description: Destination IP address.
+          type: string
+          oneOf:
+            - format: ipv4
+            - format: ipv6
+        portDst:
+          description: Destination port.
+          type: integer
+          format: int32
+        portSrc:
+          description: Source port.
+          type: integer
+          format: int32
+        protocol:
+          description: Used protocol.
+          type: string
+      required:
+        - time
+        - process
+        - ipDst
+        - portDst
+        - portSrc
+    ReportIncidentEventRequestDto:
+      type: object
+      additionalProperties: false
+      properties:
+        _id:
+          type: string
+        time:
+          description: Event detection time.
+          type: integer
+          format: int64
+        filename:
+          type: string
+        process:
+          type: string
+        host:
+          description: HTTP request server.
+          type: string
+        url:
+          description: Full URL of the HTTP request.
+          type: string
+          format: uri
+        ip:
+          description: IP address of the HTTP request.
+          type: string
+          oneOf:
+            - format: ipv4
+            - format: ipv6
+        port:
+          description: TCP port of the HTTP request.
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 65535
+        request:
+          type: string
+        method:
+          description: HTTP request method.
+          type: string
+          oneOf:
+            - description: Indicates that detected HTTP method is `GET`.
+              const: GET
+            - description: Indicates that detected HTTP method is `HEAD`.
+              const: HEAD
+            - description: Indicates that detected HTTP method is `OPTIONS`.
+              const: OPTIONS
+            - description: Indicates that detected HTTP method is `TRACE`.
+              const: TRACE
+            - description: Indicates that detected HTTP method is `PUT`.
+              const: PUT
+            - description: Indicates that detected HTTP method is `DELETE`.
+              const: DELETE
+            - description: Indicates that detected HTTP method is `POST`.
+              const: POST
+            - description: Indicates that detected HTTP method is `PATCH`.
+              const: PATCH
+            - description: Indicates that detected HTTP method is `CONNECT`.
+              const: CONNECT
+        proxy:
+          description: Indicates if proxy was detected.
+          type: boolean
+      required:
+        - time
+        - process
+        - host
+        - method
+    ReportIncidentEventSyncObjectDto:
+      type: object
+      additionalProperties: false
+      properties:
+        _id:
+          type: string
+        time:
+          description: Event detection timestamp.
+          type: string
+          format: date-time
+        type:
+          description: Synchronization object type.
+          type: string
+          oneOf:
+            - description: Indicates that synchronization object type is `UNKNOWN`.
+              const: UNKNOWN
+            - description: Indicates that synchronization object type is `MUTEX`.
+              const: MUTEX
+            - description: Indicates that synchronization object type is `EVENT`.
+              const: EVENT
+        operation:
+          description: Type of operation attempted on a synchronization object.
+          type: string
+          oneOf:
+            - description: Indicates that detected operation is `UNKNOWN`.
+              const: UNKNOWN
+            - description: Indicates that detected operation is `CREATE`.
+              const: CREATE
+            - description: Indicates that detected operation is `OPEN`.
+              const: OPEN
+        name:
+          description: Synchronization object name.
+          type: string
+        status:
+          description: Synchronization object status.
+          type: integer
+          format: int32
+        isWhiteListed:
+          type: boolean
+      required:
+        - time
+        - type
+        - operation
+        - name
+        - status
+    ReportIncidentEventSuricataDto:
+      type: object
+      additionalProperties: false
+      properties:
+        _id:
+          type: string
+        time:
+          description: Event detection time.
+          type: string
+          format: date-time
+        process:
+          type: string
+        ipDst:
+          description: Destination IP address.
+          type: string
+          oneOf:
+            - format: ipv4
+            - format: ipv6
+        ipSrc:
+          description: Source IP address.
+          type: string
+          oneOf:
+            - format: ipv4
+            - format: ipv6
+        portDst:
+          description: Destination port.
+          type: string
+        portSrc:
+          description: Source port.
+          type: string
+        transport:
+          description: Used protocol.
+          type: string
+        SID:
+          type: string
+        ipDstPacket:
+          description: Total number of packets sent to client.
+          type: string
+        ipSrcPacket:
+          description: Total number of packets sent to server.
+          type: string
+        totalBytes:
+          description: Total number of bytes in both sent and received packets.
+          type: string
+      required:
+        - time
+        - process
+        - ipDst
+        - ipSrc
+        - portDst
+        - portSrc
+    ReportIncidentEventWscriptDto:
+      type: object
+      additionalProperties: true
+      properties:
+        _id:
+          type: string
+        eventId:
+          type: string
+        Operation:
+          type: string
+        Return:
+          type: string
+      required:
+        - eventId
+        - Operation
+    ReportIncidentEventDto:
+      oneOf:
+        - $ref: "#/components/schemas/ReportIncidentEventProcessDto"
+        - $ref: "#/components/schemas/ReportIncidentEventProcessReloadDto"
+        - $ref: "#/components/schemas/ReportIncidentEventProcessYaraDto"
+        - $ref: "#/components/schemas/ReportIncidentEventModuleDto"
+        - $ref: "#/components/schemas/ReportIncidentEventFileDto"
+        - $ref: "#/components/schemas/ReportIncidentEventFileDropDto"
+        - $ref: "#/components/schemas/ReportIncidentEventRegistryDto"
+        - $ref: "#/components/schemas/ReportIncidentEventIpDto"
+        - $ref: "#/components/schemas/ReportIncidentEventRequestDto"
+        - $ref: "#/components/schemas/ReportIncidentEventSyncObjectDto"
+        - $ref: "#/components/schemas/ReportIncidentEventSuricataDto"
+        - $ref: "#/components/schemas/ReportIncidentEventWscriptDto"
+    ReportIncidentDto:
+      type: object
+      additionalProperties: false
+      properties:
+        threatLevel:
+          type: integer
+          format: int32
+        title:
+          type: string
+        desc:
+          type: string
+        source:
+          type: string
+        firstSeen:
+          type: integer
+          format: int64
+        count:
+          type: integer
+          format: int32
+        process:
+          type: string
+        mitre:
+          type: array
+          uniqueItems: true
+          minItems: 0
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              tid:
+                type: integer
+                format: int32
+              sid:
+                type: integer
+                format: int32
+              v:
+                type: integer
+                format: int32
+            required:
+              - tid
+        events:
+          type: array
+          uniqueItems: true
+          minItems: 0
+          items:
+            $ref: "#/components/schemas/ReportIncidentEventDto"
+      required:
+        - threatLevel
+        - title
+        - desc
+        - process
+    ReportMitreDto:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        phases:
+          type: array
+          uniqueItems: true
+          minItems: 0
+          items:
+            type: string
+      required:
+        - id
+    ReportMalconfDto:
+      description: Exported malware configuration.
+      type: object
+      additionalProperties: false
+      properties:
+        config:
+          type: object
+          additionalProperties: false
+          properties:
+            C2:
+              type: string
+            Keys:
+              type: object
+              additionalProperties: true
+            Options:
+              type: object
+              additionalProperties: true
+            Strings:
+              type: array
+              uniqueItems: true
+              minItems: 1
+              items:
+                type: string
+          required:
+            - C2
+        family:
+          type: string
+        processPID:
+          type: integer
+          format: int32
+        processTime:
+          type: integer
+          format: int64
+      required:
+        - config
+        - family
+        - processPID
+        - processTime
+    TaskReportDto:
+      title: Task report
+      description: Report on completed analysis task.
+      type: object
+      additionalProperties: false
+      properties:
+        analysis:
+          type: object
+          additionalProperties: false
+          properties:
+            uuid:
+              $ref: "#/components/schemas/UuidDto"
+            permanentUrl:
+              description: URL of the main analysis report.
+              type: string
+              format: uri
+              pattern: ^https://([0-9a-z]+\.){2}[0-9a-z]+/tasks/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            duration:
+              description: Duration of the analysis in seconds.
+              type: integer
+              format: int32
+              minimum: 0
+            creation:
+              description: Timestamp of the analysis creation.
+              type: integer
+              format: int64
+            creationText:
+              description: Human-readable timestamp of the analysis creation.
+              type: string
+              format: date-time
+            stopExec:
+              description: Timestamp of the analysis completion.
+              type: integer
+              format: int64
+            stopExecText:
+              description: Human-readable timestamp of the analysis completion.
+              type: string
+              format: date-time
+            reports:
+              type: object
+              additionalProperties: false
+              properties:
+                HTML:
+                  description: URL of the HTML format report.
+                  type: string
+                  format: uri
+                  pattern: ^https://([0-9a-z]+\.){2}[0-9a-z]+/report/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/summary/html$
+                IOC:
+                  description: URL of the Indicators of Compromise report.
+                  type: string
+                  format: uri
+                  pattern: ^https://([0-9a-z]+\.){2}[0-9a-z]+/report/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/ioc/json$
+                STIX:
+                  description: URL of the STIX report.
+                  type: string
+                  format: uri
+                  pattern: ^https://([0-9a-z]+\.){2}[0-9a-z]+/report/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/summary/stix$
+                MISP:
+                  description: URL of the MISP report.
+                  type: string
+                  format: uri
+                  pattern: ^https://([0-9a-z]+\.){2}[0-9a-z]+/report/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/summary/misp$
+                graph:
+                  description: URL of the Graph report.
+                  type: string
+                  format: uri
+                  pattern: ^https://([0-9a-z]+\.){2}[0-9a-z]+/tasks/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/graph$
+              required:
+                - IOC
+                - MISP
+                - HTML
+                - graph
+            tags:
+              $ref: "#/components/schemas/TagsDto"
+            sandbox:
+              type: object
+              additionalProperties: false
+              properties:
+                name:
+                  description: Name of the sandbox used for analysis.
+                  type: string
+                plan:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    name:
+                      $ref: "#/components/schemas/UserPlanNameDto"
+                  required:
+                    - name
+              required:
+                - name
+                - plan
+            options:
+              $ref: "#/components/schemas/ReportOptionsDto"
+            scores:
+              type: object
+              additionalProperties: false
+              properties:
+                verdict:
+                  $ref: "#/components/schemas/ReportVerdictDto"
+                specs:
+                  $ref: "#/components/schemas/ReportSpecsDto"
+              required:
+                - verdict
+                - specs
+            content:
+              type: object
+              additionalProperties: false
+              properties:
+                mainObject:
+                  $ref: "#/components/schemas/ReportMainObjectDto"
+                video:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    present:
+                      description: Indicates if task has video.
+                      type: boolean
+                    permanentUrl:
+                      description: URL for downloading video from the task.
+                      type: string
+                      format: uri
+                      pattern: ^https://([0-9a-z]+\.){2}[0-9a-z]+/tasks/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/download/mp4$
+                  required:
+                    - present
+                pcap:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    present:
+                      description: Indicates whether there is a PCAP file in the task.
+                      type: boolean
+                    permanentUrl:
+                      description: URL for downloading PCAP file from the task.
+                      type: string
+                      format: uri
+                      pattern: ^https://([0-9a-z]+\.){2}[0-9a-z]+/tasks/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/download/pcap$
+                  required:
+                    - present
+                sslkeys:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    present:
+                      description: Indicates if there are SSL keys in the task.
+                      type: boolean
+                    permanentUrl:
+                      description: URL for downloading SSL keys from the task.
+                      type: string
+                      format: uri
+                      pattern: ^https://([0-9a-z]+\.){2}[0-9a-z]+/tasks/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/download/sslkeys$
+                  required:
+                    - present
+                screenshots:
+                  type: array
+                  uniqueItems: true
+                  minItems: 0
+                  items:
+                    $ref: "#/components/schemas/ScreenshotDto"
+                dumps:
+                  type: array
+                  uniqueItems: true
+                  minItems: 0
+                  items:
+                    $ref: "#/components/schemas/ProcessDumpDto"
+              required:
+                - mainObject
+                - video
+                - pcap
+                - sslkeys
+                - screenshots
+          required:
+            - uuid
+            - permanentUrl
+            - duration
+            - creation
+            - creationText
+            - reports
+            - tags
+            - sandbox
+            - options
+            - scores
+            - content
+        environments:
+          $ref: "#/components/schemas/ReportEnvironmentDto"
+        counters:
+          $ref: "#/components/schemas/ReportCountersDto"
+        processes:
+          type: array
+          uniqueItems: true
+          minItems: 0
+          items:
+            $ref: "#/components/schemas/ReportProcessDto"
+        network:
+          type: object
+          additionalProperties: false
+          properties:
+            dnsRequests:
+              type: array
+              uniqueItems: true
+              minItems: 0
+              items:
+                $ref: "#/components/schemas/ReportDnsRequestDto"
+            httpRequests:
+              type: array
+              uniqueItems: true
+              minItems: 0
+              items:
+                $ref: "#/components/schemas/ReportHttpRequestDto"
+            connections:
+              type: array
+              uniqueItems: true
+              minItems: 0
+              items:
+                $ref: "#/components/schemas/ReportConnectionDto"
+            threats:
+              type: array
+              uniqueItems: true
+              minItems: 0
+              items:
+                $ref: "#/components/schemas/ReportThreatDto"
+          required:
+            - dnsRequests
+            - httpRequests
+            - connections
+            - threats
+        modified:
+          type: object
+          additionalProperties: false
+          properties:
+            files:
+              type: array
+              uniqueItems: true
+              minItems: 0
+              items:
+                $ref: "#/components/schemas/ReportModifiedFileDto"
+            registry:
+              type: array
+              uniqueItems: true
+              minItems: 0
+              items:
+                $ref: "#/components/schemas/ReportModifiedRegistryDto"
+          required:
+            - files
+        incidents:
+          type: array
+          uniqueItems: true
+          minItems: 0
+          items:
+            $ref: "#/components/schemas/ReportIncidentDto"
+        mitre:
+          type: array
+          uniqueItems: false
+          minItems: 0
+          items:
+            $ref: "#/components/schemas/ReportMitreDto"
+        malconf:
+          type: array
+          uniqueItems: true
+          minItems: 0
+          items:
+            $ref: "#/components/schemas/ReportMalconfDto"
+        debugStrings:
+          type: array
+          uniqueItems: true
+          minItems: 0
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              time:
+                type: integer
+                format: int64
+              message:
+                type: string
+              process:
+                type: string
+            required:
+              - time
+              - message
+              - process
+        status:
+          description: Task completion status.
+          type: string
+      required:
+        - status
+    UserLimitsDto:
+      title: User account
+      description: Contains various usage limits.
+      type: object
+      additionalProperties: false
+      properties:
+        web:
+          description: Defines limits for interactive usage. Value of -1 indicates
+            unlimited usage.
+          type: object
+          additionalProperties: false
+          properties:
+            minute:
+              type: integer
+              format: int32
+              minimum: -1
+            hour:
+              type: integer
+              format: int32
+              minimum: -1
+            day:
+              type: integer
+              format: int32
+              minimum: -1
+            month:
+              type: integer
+              format: int32
+              minimum: -1
+          required:
+            - minute
+            - hour
+            - day
+            - month
+        api:
+          description: Defines limits for API usage. Value of -1 indicates unlimited usage.
+          type: object
+          additionalProperties: false
+          properties:
+            minute:
+              type: integer
+              format: int32
+              minimum: -1
+            hour:
+              type: integer
+              format: int32
+              minimum: -1
+            day:
+              type: integer
+              format: int32
+              minimum: -1
+            month:
+              type: integer
+              format: int32
+              minimum: -1
+          required:
+            - minute
+            - hour
+            - day
+            - month
+        parallels:
+          description: Defines limits for parallel runs.
+          type: object
+          additionalProperties: false
+          properties:
+            total:
+              type: integer
+              format: int32
+            available:
+              type: integer
+              format: int32
+          required:
+            - total
+            - available
+      required:
+        - web
+        - api
+        - parallels
+    TaskEnvSoftwareDto:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          description: Application name.
+          type: string
+        version:
+          description: Application version.
+          type: string
+      required:
+        - name
+    TaskEnvHotfixDto:
+      description: Installed operating system hotfixes.
+      type: string
+    TaskEnvironmentDto:
+      title: Sandbox environment
+      description: System's sandbox environment information.
+      type: object
+      additionalProperties: false
+      properties:
+        os:
+          $ref: "#/components/schemas/OsDto"
+        version:
+          $ref: "#/components/schemas/OsVersionDto"
+        bitness:
+          $ref: "#/components/schemas/OsBitnessDto"
+        build:
+          description: Operating system build number.
+          type: integer
+          format: int32
+        variant:
+          description: Operating system variant (e.g., Home, Professional).
+          type: string
+        type:
+          $ref: "#/components/schemas/EnvTypeDto"
+        software:
+          description: Software information.
+          type: object
+          additionalProperties: false
+          properties:
+            ie:
+              description: Internet Explorer information.
+              type: object
+              additionalProperties: false
+              properties:
+                version:
+                  description: Internet Explorer version.
+                  type: string
+            apps:
+              description: An array with installed applications.
+              type: array
+              uniqueItems: true
+              minItems: 0
+              items:
+                $ref: "#/components/schemas/TaskEnvSoftwareDto"
+            upps:
+              description: Operating system updates.
+              type: array
+              uniqueItems: true
+              minItems: 0
+              items:
+                $ref: "#/components/schemas/TaskEnvHotfixDto"
+          required:
+            - apps
+      required:
+        - os
+        - version
+        - bitness
+        - type
+        - software
+    TaskEnvironmentsDto:
+      title: Sandbox environments
+      description: List with environment information.
+      type: array
+      uniqueItems: true
+      minItems: 0
+      items:
+        $ref: "#/components/schemas/TaskEnvironmentDto"
+    SuccessDocumentDto:
+      title: Success response document
+      description: Top level success response document.
+      type: object
+      additionalProperties: false
+      properties:
+        error:
+          description: False indicates a successful request.
+          type: boolean
+          const: false
+        data:
+          description: Contains response data.
+          oneOf:
+            - $ref: "#/components/schemas/TaskReportDto"
+            - type: object
+              additionalProperties: false
+              properties:
+                tasks:
+                  $ref: "#/components/schemas/TasksHistoryDto"
+                taskid:
+                  $ref: "#/components/schemas/UuidDto"
+                limits:
+                  $ref: "#/components/schemas/UserLimitsDto"
+                environments:
+                  $ref: "#/components/schemas/TaskEnvironmentsDto"
+              oneOf:
+                - required:
+                    - tasks
+                - required:
+                    - taskid
+                - required:
+                    - limits
+                - required:
+                    - environments
+      required:
+        - error
+        - data
+    TaskAddTimeDto:
+      title: Success add time to task message
+      description: Add time to task response message.
+      type: object
+      additionalProperties: false
+      properties:
+        error:
+          description: False indicates a successful request.
+          type: boolean
+          const: false
+        message:
+          description: Contains response message.
+          type: string
+          const: Add time in task successful
+      required:
+        - error
+        - message
+    TaskStopDto:
+      title: Success stop task message
+      description: Stop task success response message.
+      type: object
+      additionalProperties: false
+      properties:
+        error:
+          description: False indicates a successful request.
+          type: boolean
+          const: false
+        message:
+          description: Contains response message.
+          type: string
+          const: Stop task successful
+      required:
+        - error
+        - message
+    TaskDeleteDto:
+      title: Success response message for delete task
+      description: Delete task message.
+      type: object
+      additionalProperties: false
+      properties:
+        error:
+          description: False indicates a successful request.
+          type: boolean
+          const: false
+        message:
+          description: Contains response message.
+          type: string
+          const: Delete task successful
+      required:
+        - error
+        - message
+    BrowserDto:
+      title: Browser
+      description: Browser.
+      type: string
+      oneOf:
+        - description: Indicates that chosen browser is `Internet Explorer`.
+          const: Internet Explorer
+        - description: Indicates that chosen browser is `Microsoft Edge`.
+          const: Microsoft Edge
+        - description: Indicates that chosen browser is `Google Chrome`.
+          const: Google Chrome
+        - description: Indicates that chosen browser is `Mozilla Firefox`.
+          const: Mozilla Firefox
+        - description: Indicates that chosen browser is `Safari`.
+          const: Safari
+    UserPresetDto:
+      title: Environment presets
+      description: User's saved sandbox environment presets.
+      type: object
+      additionalProperties: false
+      properties:
+        _id:
+          description: Preset ID.
+          type: string
+          pattern: ^[0-9A-z]+$
+        name:
+          description: Preset name.
+          type: string
+        userId:
+          description: Preset's owner ID.
+          type: string
+          pattern: ^[0-9a-f]+$
+        userPlanName:
+          $ref: "#/components/schemas/UserPlanNameDto"
+        createTime:
+          description: Human-readable timestamp of the preset creation.
+          type: string
+          format: date-time
+        expirationTimeSelected:
+          type: boolean
+        expirationTime:
+          description: Preset lifetime.
+          type: string
+        privacy:
+          $ref: "#/components/schemas/PrivacyDto"
+        timeout:
+          type: integer
+          format: int32
+          minimum: 0
+        type:
+          $ref: "#/components/schemas/EnvTypeDto"
+        os:
+          $ref: "#/components/schemas/OsDto"
+        version:
+          $ref: "#/components/schemas/OsVersionDto"
+        bitness:
+          $ref: "#/components/schemas/OsBitnessDto"
+        is64Bit:
+          type: boolean
+        locale:
+          type: string
+        autoclicker:
+          type: boolean
+        browser:
+          $ref: "#/components/schemas/BrowserDto"
+        chatGPT:
+          type: boolean
+        el:
+          type: boolean
+        extension:
+          type: boolean
+        hide_source:
+          type: boolean
+        location:
+          type: string
+        network:
+          type: string
+        netConnected:
+          type: boolean
+        netviator:
+          type: boolean
+        mitm:
+          type: boolean
+        fakenet:
+          type: boolean
+        noControls:
+          type: boolean
+        vpn:
+          type: boolean
+        openVPN:
+          type: string
+        residentialProxy:
+          type: boolean
+        residentialProxyGeo:
+          type: string
+        torGeo:
+          type: string
+      required:
+        - _id
+        - name
+        - userId
+        - bitness
+        - createTime
+        - os
+        - privacy
+        - timeout
+        - type
+        - userPlanName
+        - version
+    IocDto:
+      title: IOC
+      description: Indicator of compromise.
+      type: object
+      additionalProperties: false
+      properties:
+        category:
+          description: IOC category.
+          type: string
+          oneOf:
+            - const: Main object
+            - const: Dropped file
+            - const: DNS requests
+            - const: Connections
+        type:
+          description: IOC type.
+          type: string
+          oneOf:
+            - const: md5
+            - const: sha1
+            - const: sha256
+            - const: domain
+            - const: ip
+            - const: url
+        name:
+          description: IOC name.
+          type: string
+        ioc:
+          description: IOC value.
+          type: string
+        reputation:
+          description: IOC reputation (numeric).
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 2
+        discoveringEntryId:
+          description: ""
+          type: string
+      required:
+        - category
+        - type
+        - ioc
+        - reputation
+    SuccessMessageDto:
+      title: Success response message
+      description: Top level success response message.
+      type: object
+      additionalProperties: false
+      properties:
+        error:
+          description: False indicates a successful request.
+          type: boolean
+          const: false
+        message:
+          description: Contains response message.
+          type: string
+          oneOf:
+            - const: Add time in task successful
+            - const: Stop task successful
+            - const: Delete task successful
+      required:
+        - error
+        - message
+    SuccessDocumentArrayDto:
+      title: Success response array document
+      description: Top level success response array document.
+      type: array
+      uniqueItems: true
+      minItems: 0
+      items:
+        oneOf:
+          - $ref: "#/components/schemas/UserPresetDto"
+          - $ref: "#/components/schemas/IocDto"
+    TaskStatusMainObjectDto:
+      type: object
+      additionalProperties: false
+      properties:
+        names:
+          type: object
+          additionalProperties: false
+          properties:
+            need_rename:
+              type: boolean
+            real:
+              description: Name of the main object file.
+              type: string
+            url:
+              description: Full URL.
+              type: string
+              format: uri
+            basename:
+              description: Submitted file name/url.
+              type: string
+            location:
+              type: string
+          oneOf:
+            - required:
+                - need_rename
+                - real
+                - basename
+            - required:
+                - url
+                - basename
+        hashes:
+          $ref: "#/components/schemas/HashesApiDto"
+      required:
+        - names
+        - hashes
+    TaskStatusOptionsDto:
+      type: object
+      additionalProperties: false
+      properties:
+        private:
+          $ref: "#/components/schemas/PrivacyDto"
+        whitelist:
+          type: array
+          uniqueItems: true
+          minItems: 0
+          items:
+            type: string
+        mitm:
+          description: Indicates if man-in-the-middle was used.
+          type: boolean
+        fakenet:
+          description: Indicates if fake networking was used.
+          type: boolean
+        openVPN:
+          type: string
+        torGeo:
+          description: Indicates chosen TOR geolocation option.
+          type: string
+        netviator:
+          type: boolean
+        netConnected:
+          type: boolean
+        network:
+          description: Indicates if network activity was enabled.
+          type: string
+        logger:
+          type: string
+        presentation:
+          description: Indicates if presentation mode was on.
+          type: boolean
+        teamwork:
+          type: boolean
+        reboots:
+          type: boolean
+        onlyimportant:
+          type: boolean
+        video:
+          description: Indicates if video recording was on.
+          type: boolean
+        locale:
+          type: string
+        residentialProxyGeo:
+          type: string
+        residentialProxy:
+          type: boolean
+        autoclickerDebugMode:
+          type: boolean
+        autoclicker:
+          type: boolean
+        chatGPT:
+          type: boolean
+    TaskStatusEnvironmentDto:
+      type: object
+      additionalProperties: false
+      properties:
+        OS:
+          type: object
+          additionalProperties: false
+          properties:
+            full:
+              description: Name of the operating system used.
+              type: string
+            build:
+              description: Operating system build.
+              type: integer
+              format: int32
+            product:
+              $ref: "#/components/schemas/OsDto"
+            variant:
+              description: Operating system edition.
+              type: string
+            product_type:
+              description: Client/Server.
+              type: string
+              oneOf:
+                - const: Client
+                - const: Server
+            bitness:
+              description: Operating system bitness.
+              type: string
+              oneOf:
+                - const: "32"
+                - const: "64"
+            major:
+              $ref: "#/components/schemas/OsVersionDto"
+            sp:
+              description: Latest service pack installed.
+              type: string
+            type:
+              $ref: "#/components/schemas/EnvTypeDto"
+            elPrompt:
+              type: boolean
+          required:
+            - product
+            - product_type
+            - bitness
+            - major
+            - type
+            - full
+            - build
+      required:
+        - OS
+    TaskStatusVerdictDto:
+      type: object
+      additionalProperties: false
+      properties:
+        threat_level:
+          description: Threat level of the analysis.
+          type: number
+        text:
+          $ref: "#/components/schemas/ThreatLevelTextDto"
+      required:
+        - threat_level
+        - text
+    TaskStatusSpecsDto:
+      type: object
+      additionalProperties: false
+      properties:
+        autostart:
+          description: Indicates if threat uses autostart feature.
+          type: boolean
+        bad_module_certificate:
+          type: boolean
+        bad_process_certificate:
+          type: boolean
+        cpu_overrun:
+          description: Indicates if overly high CPU usage was detected.
+          type: boolean
+        crashed_apps:
+          description: Indicates if any application crash was detected.
+          type: boolean
+        crashed_task:
+          description: Indicates if analysis task crash was detected.
+          type: boolean
+        debug_output:
+          description: Indicates if any debug data was extracted.
+          type: boolean
+        executable_dropped:
+          description: Indicates if threat uses dropped executables.
+          type: boolean
+        exploitable:
+          description: Indicates if any known exploit was detected.
+          type: boolean
+        has_trace:
+          type: boolean
+        injects:
+          description: Indicates if threat uses injections.
+          type: boolean
+        known_threat:
+          description: Indicates if known malware was detected.
+          type: boolean
+        low_access:
+          description: Indicates if threat uses low level access.
+          type: boolean
+        malware_config:
+          description: Indicates if malware config was extracted from submitted file.
+          type: boolean
+        mem_overrun:
+          description: Indicates if overly high RAM usage was detected.
+          type: boolean
+        multiprocessing:
+          description: Indicates if threat uses multiprocessing.
+          type: boolean
+        network_loader:
+          description: Indicates if network download was detected.
+          type: boolean
+        network_threats:
+          description: Indicates if any network related threat was detected by Suricata
+            engine.
+          type: boolean
+        not_started:
+          description: Indicates if submitted file execution failed.
+          type: boolean
+        process_dump:
+          description: Indicates if the process memory dump can be extracted.
+          type: boolean
+        reboot:
+          description: Indicates if system reboot was detected.
+          type: boolean
+        service_luncher:
+          description: Indicates if new service registration was detected.
+          type: boolean
+        spam:
+          description: Indicates if spam was detected.
+          type: boolean
+        static_detections:
+          description: Indicates if any malicious pattern was detected by static analysis
+            engine.
+          type: boolean
+        stealing:
+          description: Indicates if malware 'stealer' capability was detected.
+          type: boolean
+        susp_struct:
+          type: boolean
+        tor:
+          description: Indicates if TOR traffic routing was enabled during task creation.
+          type: boolean
+        uac_request:
+          description: Indicates if User Access Control (UAC) request was detected.
+          type: boolean
+    TaskStatusDto:
+      title: Task status
+      description: Task completion status.
+      type: object
+      additionalProperties: false
+      properties:
+        _id:
+          type: string
+          pattern: ^[0-9a-f]+$
+        uuid:
+          $ref: "#/components/schemas/UuidDto"
+        status:
+          description: >
+            Task completion rate (%). This value can indicate the following task
+            states:
+              - -1 - the task is in the `FAILED` state;
+              - 0-20 - the task is in the `PREPARING` state;
+              - 21-99 - the task is in the `RUNNING` state;
+              - 100 - the task is in the `COMPLETED` state;
+          type: integer
+          format: int32
+          minimum: -1
+          maximum: 100
+        remaining:
+          description: Number of seconds until task completion.
+          type: integer
+          format: int32
+          minimum: 0
+        times:
+          type: object
+          additionalProperties: false
+          properties:
+            timeout:
+              description: Timeout for analysis in seconds.
+              type: integer
+              format: int32
+              minimum: 0
+            startExec:
+              description: Human-readable timestamp of the analysis creation.
+              type: string
+              format: date-time
+          required:
+            - timeout
+            - startExec
+        public:
+          type: object
+          additionalProperties: false
+          properties:
+            maxAddedTimeReached:
+              description: Indicates if maximum allowed task runtime was reached.
+              type: boolean
+            objects:
+              type: object
+              additionalProperties: false
+              properties:
+                runType:
+                  $ref: "#/components/schemas/TaskTypeDto"
+                mainObject:
+                  $ref: "#/components/schemas/TaskStatusMainObjectDto"
+              required:
+                - runType
+                - mainObject
+            options:
+              $ref: "#/components/schemas/TaskStatusOptionsDto"
+            environment:
+              $ref: "#/components/schemas/TaskStatusEnvironmentDto"
+          required:
+            - maxAddedTimeReached
+            - objects
+            - options
+            - environment
+        tags:
+          $ref: "#/components/schemas/TagsDto"
+        usersTags:
+          $ref: "#/components/schemas/TagsDto"
+        scores:
+          type: object
+          additionalProperties: false
+          properties:
+            verdict:
+              $ref: "#/components/schemas/TaskStatusVerdictDto"
+            specs:
+              $ref: "#/components/schemas/TaskStatusSpecsDto"
+          required:
+            - verdict
+            - specs
+        actions:
+          type: object
+          additionalProperties: false
+          properties:
+            manualclosed:
+              description: Indicates if the task was stopped manually by the user.
+              type: boolean
+          required:
+            - manualclosed
+        threats:
+          description: Known threats discovered during analysis.
+          type: array
+          uniqueItems: true
+          minItems: 0
+          items:
+            type: string
+      required:
+        - uuid
+        - status
+        - remaining
+        - times
+        - public
+        - tags
+        - usersTags
+        - scores
+  examples:
+    GetAnalysisExample:
+      value:
+        error: false
+        data:
+          tasks:
+            - uuid: 123e4567-e89b-12d3-a456-426614174000
+              verdict: No threats detected
+              name: example.exe
+              related: https://app.any.run/tasks/123e4567-e89b-12d3-a456-426614174000
+              pcap: https://content.any.run/tasks/123e4567-e89b-12d3-a456-426614174000/download/pcap
+              file: https://content.any.run/tasks/123e4567-e89b-12d3-a456-426614174000/download/files/abcdef12-3456-7890-abcd-ef1234567890
+              json: https://api.any.run/report/123e4567-e89b-12d3-a456-426614174000/summary/json
+              misp: https://api.any.run/report/123e4567-e89b-12d3-a456-426614174000/summary/misp
+              tags: []
+              date: 2026-03-05T10:28:55.238Z
+              hashes:
+                md5: d41d8cd98f00b204e9800998ecf8427e
+                sha1: da39a3ee5e6b4b0d3255bfef95601890afd80709
+                sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+                ssdeep: 3:abcdefghijklmno:pqrstuvwxyz
+    ErrorExample_403_UnauthorizedError:
+      value:
+        error: true
+        message: Authorization required
+    ErrorExample_403_WrongCredentialsError:
+      value:
+        error: true
+        message: Wrong authorization data
+    ErrorExample_403_UnrecognizedError:
+      value:
+        error: true
+        message: WOW! We can't recognize you! Please contact us support@any.run
+    ErrorExample_403_ApiUnavailableError:
+      value:
+        error: true
+        message: API is not available on the free plan
+    CreateUrlAnalysisExample:
+      value:
+        obj_type: url
+        obj_url: https://sample.com
+        opt_timeout: 60
+        opt_automated_interactivity: true
+    RunNewAnalysisExample:
+      value:
+        error: false
+        data:
+          taskid: 0cf223f2-530e-4a50-b68f-563045268648
+    RunNewAnalysisQueuedExample:
+      value:
+        error: false,
+        message: Task is queued and awaits execution. To track its status, call GET
+          /v1/analysis/monitor/{queueTaskId}.
+        data:
+          queueTaskId: 7261f5d1-0939-4abe-8761-b598d46cfc8d
+    ErrorExample_403_PlanRequirementsNotMetError:
+      value:
+        error: true
+        message: Requires an active subscription to a Hunter or Enterprise plan
+    ErrorExample_400_PlanRequirementsNotMetError:
+      value:
+        error: true
+        message: This feature is not available for your plan
+    ErrorExample_400_PublicTasksWithBrandedReportsError:
+      value:
+        error: true
+        message: Users with the branded reports feature enabled cannot create public
+          tasks.
+    ErrorExample_403_ApiDisabledError:
+      value:
+        error: true
+        message: API is disabled in your account
+    ErrorExample_403_TaskAccessForbiddenError:
+      value:
+        error: true
+        message: You can't access to this task
+    ErrorExample_404_TaskNotFoundError:
+      value:
+        error: true
+        message: Task not found
+    ErrorExample_400_TaskInvalidUuidError:
+      value:
+        error: true
+        message: Invalid task uuid in request
+    ProlongAnalysisExample:
+      value:
+        error: false
+        message: Add time in task successful
+    ErrorExample_400_TaskAlreadyCompletedError:
+      value:
+        error: true
+        message: Task {taskUUID} has already been completed
+    StopAnalysisExample:
+      value:
+        error: false
+        message: Stop task successful
+    DeleteAnalysisExample:
+      value:
+        error: false
+        message: Delete task successful
+    ErrorExample_400_TaskIsRunningError:
+      value:
+        error: true
+        message: Task is still running
+    TaskRunningExample:
+      data:
+        task:
+          _id: 64b000000000000000000001
+          actions:
+            manualclosed: false
+          scores:
+            verdict:
+              text: No threats detected
+              threat_level: 0
+            specs:
+              multiprocessing: true
+          public:
+            environment:
+              OS:
+                elPrompt: false
+                full: "Windows 10 Professional (build: 19044, 64 bit)"
+                build: 19044
+                product: Windows
+                variant: Professional
+                bitness: "64"
+                major: "10"
+                sp: null
+                type: complete
+                product_type: Client
+            options:
+              scriptTracer:
+                wscript: true
+                powershell: true
+                browserPatcher: true
+                longSessionMode: false
+              locale: null
+              autoclicker: true
+              enableSignaturesTracing: false
+              openVPN: null
+              fakenet: false
+              video: true
+              onlyimportant: false
+              reboots: true
+              teamwork: true
+              mitm: false
+              presentation: false
+              logger: heavy
+              network: unlimited
+              netviator: false
+              torGeo: null
+              residentialProxy: false
+              residentialProxyGeo: null
+              netConnected: true
+              private: bylink
+              resolution:
+                width: 1280
+                height: 720
+              autoclickerDebugMode: false
+              chatGPT: false
+              forceElevatePrivileges: false
+              heavy_evasion: false
+              isPublicDisabled: false
+              privateSample: false
+              whitelist: []
+            objects:
+              runType: file
+              mainObject:
+                names:
+                  location: temp
+                  basename: example.html
+                  real: example.exe
+                  need_rename: true
+                hashes:
+                  md5: d41d8cd98f00b204e9800998ecf8427e
+                  sha1: da39a3ee5e6b4b0d3255bfef95601890afd80709
+                  sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+                  ssdeep: 3:abcdefghijklmno:pqrstuvwxyz
+            maxAddedTimeReached: false
+          times:
+            startExec: 2025-12-09T14:31:30.308Z
+            timeout: 60
+          tags:
+            - example
+          usersTags: []
+          remaining: 0
+          status: 100
+          uuid: 123e4567-e89b-12d3-a456-426614174000
+          threats: []
+        completed: true
+        error: false
+    TaskPreLauncErrorExample:
+      data:
+        error: true
+        message: Pre-launch error occurred.
+    TaskQueuedExample:
+      data:
+        error: false
+        message: Task is queued and awaits execution.
+    TaskCanceledOrUnknownExample:
+      data:
+        error: false
+        message: Task status is unknown or the task was canceled
+    GetEnvironmentsExample:
+      value:
+        error: false
+        data:
+          environments:
+            - build: 22000
+              variant: professional
+              version: "11"
+              type: complete
+              os: windows
+              software:
+                ie: {}
+                apps:
+                  - name: Mozilla Firefox (x64 en-US)
+                    version: 111.0.1
+                  - name: PowerShell 7-x64
+                    version: 7.3.5.0
+                  - name: Google Chrome
+                    version: 69.123.49202
+                  - name: Microsoft Edge Update
+                    version: 1.3.173.51
+                  - name: Microsoft Edge WebView2 Runtime
+                    version: 103.0.1264.77
+                  - name: Microsoft OneDrive
+                    version: 22.077.0410.0007
+                  - name: Microsoft Edge
+                    version: 111.0.1661.62
+                upps: []
+              bitness: 64
+            - build: 1204
+              variant: debian
+              version: "12.2"
+              type: complete
+              os: linux
+              software:
+                ie: {}
+                apps:
+                  - name: chrome-gnome-shell
+                    version: 42.1-3
+                  - name: chromium
+                    version: 132.0.6834.110-1~deb12u1
+                  - name: chromium-common
+                    version: 132.0.6834.110-1~deb12u1
+                  - name: chromium-sandbox
+                    version: 132.0.6834.110-1~deb12u1
+                  - name: linux-image-6.1.0-25-arm64
+                    version: 6.1.106-3
+                  - name: linux-image-6.1.0-26-arm64
+                    version: 6.1.112-1
+                  - name: linux-image-6.11.5+bpo-arm64
+                    version: 6.11.5-1~bpo12+1
+                  - name: linux-image-arm64
+                    version: 6.1.112-1
+                  - name: python3
+                    version: 3.11.2-1+b1
+                  - name: python3.11
+                    version: 3.11.2-6+deb12u4
+                upps: []
+              bitness: 64
+            - build: 22042
+              variant: ubuntu
+              version: 22.04.2
+              type: complete
+              os: linux
+              software:
+                ie: {}
+                apps:
+                  - name: kernel
+                    version: Linux ubuntu22 6.5.5-060505-generic
+                  - name: python3
+                    version: 3.10.6-1~22.04
+                  - name: python3.10
+                    version: 3.10.12-1~22.04.2
+                  - name: google-chrome-stable
+                    version: 119.0.6045.123-1
+                  - name: firefox
+                    version: 119.0.1-1
+                upps: []
+              bitness: 64
+            - build: 14000
+              variant: complete
+              version: "14"
+              type: complete
+              os: android
+              software:
+                ie: {}
+                apps: []
+                upps: []
+              bitness: 64
+            - build: 15000
+              variant: complete
+              version: "15"
+              type: complete
+              os: macos
+              software:
+                ie: {}
+                apps:
+                  - name: Safari
+                    version: "16.6"
+                  - name: Google Chrome
+                    version: 144.0.7559.110
+                  - name: Mozilla Firefox
+                    version: 147.0.3
+                upps: []
+              bitness: 64
+    GetUserLimitsExample:
+      value:
+        error: false
+        data:
+          limits:
+            web:
+              minute: -1
+              hour: -1
+              day: -1
+              month: -1
+            api:
+              minute: -1
+              hour: -1
+              day: -1
+              month: 250
+            parallels:
+              total: 1
+              available: 1
+    GetUserPresetsExample:
+      value:
+        - _id: QiRRnjH9JNnbmevtH
+          name: Default
+          userId: 5f4a2c35dfe15b1ff4cd4c1e
+          autoclicker: false
+          bitness: 64
+          browser: Internet Explorer
+          chatGPT: false
+          createTime: 2024-01-01T10:00:00.000Z
+          el: true
+          expirationTime: 2weeks
+          expirationTimeSelected: false
+          extension: true
+          fakenet: false
+          hide_source: false
+          is64Bit: true
+          locale: en-US
+          location: temp
+          mitm: false
+          netConnected: true
+          netviator: false
+          network: unlimited
+          noControls: true
+          openVPN: ""
+          os: Windows
+          privacy: byteam
+          residentialProxy: false
+          residentialProxyGeo: ""
+          timeout: 60
+          torGeo: fastest
+          type: complete
+          userPlanName: Enterprise
+          version: "10"
+          vpn: false
+    GetIOCJsonExample:
+      value:
+        - category: Main object
+          type: sha256
+          name: sample.exe
+          ioc: 31eb1de7e840a342fd468e558e5ab627bcb4c542a8fe01aec4d5ba01d539a0fc
+          reputation: 0
+          discoveringEntryId: 675e624c22acb500c6d4cafb
+    ErrorExample_403_PrivateContentError:
+      value:
+        error: true
+        message: Private content
+    TaskSoonExample:
+      data:
+        error: false
+        message: Task will be launched soon.
+    ErrorExample_403_IntelError:
+      value:
+        error: true
+        message: You must use your personal login data or API key for this type of
+          request
+    ErrorExample_404_UserNotFoundError:
+      value:
+        error: true
+        message: User not found
+    TaskRunningMonitorExample:
+      $ref: "#/components/examples/TaskRunningExample"
+    TaskSoonMonitorExample:
+      $ref: "#/components/examples/TaskSoonExample"
+    TaskErrorMonitorExample:
+      $ref: "#/components/examples/TaskPreLauncErrorExample"
+    TaskQueuedMonitorExample:
+      $ref: "#/components/examples/TaskQueuedExample"
+    TaskCanceledOrUnknownMonitorExample:
+      $ref: "#/components/examples/TaskCanceledOrUnknownExample"
+  securitySchemes:
+    API-Key:
+      description: API key Authentication. Prefix the API key value with "API-Key".
+      type: apiKey
+      in: header
+      name: Authorization
+    Basic:
+      description: Basic HTTP Authentication.
+      type: http
+      scheme: Basic
